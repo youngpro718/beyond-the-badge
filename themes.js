@@ -1,6 +1,6 @@
 // Shared by index.html (the sign-up page) and settings.html.
 // Edit a theme, a guide or a runaway here and both pages pick it up.
-// After editing, raise the number in "themes.js?v=6" in both pages, so phones
+// After editing, raise the number in "themes.js?v=7" in both pages, so phones
 // that already opened the page download the new version instead of a cached one.
 // Frames live in assets/cut/, made from assets/source/ by tools/make-cutouts.py.
 
@@ -145,7 +145,7 @@ function readSettings(search) {
   const s = Object.assign({}, DEFAULTS);
   for (const [key, short] of Object.entries(PARAM_KEYS)) if (p.has(short)) s[key] = p.get(short);
   for (const key of ON_OFF) s[key] = String(s[key]) !== '0' && String(s[key]) !== 'false';
-  const qs = p.getAll('q').map(q => q.trim()).filter(Boolean).slice(0, MAX_QUESTIONS);
+  const qs = p.getAll('q').map(q => q.trim().slice(0, 300)).filter(Boolean).slice(0, MAX_QUESTIONS);
   if (qs.length) s.questions = qs;
   s.mascot = OLD_MASCOT_NAMES[s.mascot] || s.mascot;
   s.preview = p.get('preview') === '1';

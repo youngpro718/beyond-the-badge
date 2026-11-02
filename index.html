@@ -4,6 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Beyond the Badge</title>
+<meta name="description" content="A moment of thanks for the people and moments that make a difference.">
+<meta name="theme-color" content="#1f2a4a">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Beyond the Badge">
+<meta property="og:description" content="A moment of thanks for the people and moments that make a difference.">
+<meta property="og:image" content="https://youngpro718.github.io/beyond-the-badge/assets/share.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 2c6 4 15 5 24 2l6 6c-4 8-3 17 1 23-1 15-12 24-31 29C13 57 2 48 1 33c4-6 5-15 1-23l6-6c9 3 18 2 24-2z' fill='%23b8862f'/%3E%3Cpath d='M32 18l4 9 10 1-7 7 2 10-9-5-9 5 2-10-7-7 10-1z' fill='%231f2a4a'/%3E%3C/svg%3E">
 <style>
 /* Colors come from the theme in themes.js; these are only the starting values. */
 :root{
@@ -146,6 +154,7 @@ input[aria-invalid="true"]{border-color:#b3261e}
   .guide-figure img,.actor *,.guide,.bubble,.hero-art{animation:none!important}
   .q{transition:none}
 }
+.hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
 .preview-flag{position:fixed;inset:0 0 auto;z-index:40;background:#1f2329;color:#fff;font:700 11px/1 var(--sans);letter-spacing:.12em;text-align:center;padding:6px}
 </style>
 </head>
@@ -154,6 +163,7 @@ input[aria-invalid="true"]{border-color:#b3261e}
 <div id="decor" aria-hidden="true"></div>
 
 <main>
+  <noscript><div class="card" style="margin-bottom:16px;text-align:center">This page needs JavaScript turned on to work.</div></noscript>
   <header class="card hero">
     <div id="heroArt" aria-hidden="true"></div>
     <div class="eyebrow" id="eyebrow"></div>
@@ -183,6 +193,7 @@ input[aria-invalid="true"]{border-color:#b3261e}
   <form id="form" hidden>
     <p class="note" id="intro"></p>
     <div id="questions"></div>
+    <div class="hp" aria-hidden="true"><label>Leave this empty <input id="website" tabindex="-1" autocomplete="off"></label></div>
     <section class="q" data-step="ready">
       <button type="submit" class="btn wide" id="submitBtn"></button>
       <p class="message" id="message" role="status" aria-live="polite"></p>
@@ -203,8 +214,8 @@ input[aria-invalid="true"]{border-color:#b3261e}
   <div class="bubble" id="bubble" aria-live="polite"></div>
 </aside>
 
-<script src="config.js?v=6"></script>
-<script src="themes.js?v=6"></script>
+<script src="config.js?v=7"></script>
+<script src="themes.js?v=7"></script>
 <script>
 const SUPABASE = SUPABASE_URL + '/rest/v1/', KEY = SUPABASE_KEY;
 const S = readSettings(location.search);
@@ -214,6 +225,8 @@ const $ = sel => document.querySelector(sel);
 const wait = ms => new Promise(r => setTimeout(r, ms));
 const pick = list => list[Math.floor(Math.random() * list.length)];
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const touch = matchMedia('(pointer: coarse)').matches;
+const focusFirst = () => { if (!touch) $('#a0').focus({ preventScroll: true }); };
 const mascotKeys = Object.keys(MASCOTS);
 
 // Every drawing's height, so characters keep the same size from frame to frame.
@@ -411,13 +424,15 @@ $('#signinForm').addEventListener('submit', e => {
   if (!nameOk || !emailOk) { (nameOk ? $('#whoEmail') : $('#who')).focus(); return; }
   remember({ name, email });
   signIn(name, email);
-  $('#a0').focus({ preventScroll: true });
+  focusFirst();
   $('#signed').scrollIntoView({ block: 'start' });
 });
 $('#notYou').addEventListener('click', () => {
   remember('');
   visitor = visitorEmail = '';
   $('#who').value = $('#whoEmail').value = '';
+  form.reset();
+  clearDraft();
   $('#signed').hidden = true;
   $('#form').hidden = true;
   $('#finale').hidden = true;
@@ -616,7 +631,8 @@ function startCountdown(when) {
   const el = $('#countdown');
   const tick = () => {
     const d = target - Date.now();
-    el.textContent = d <= 0 ? 'The event is here!'
+    el.textContent = d < -864e5 ? ''   // the day after, it goes away
+      : d <= 0 ? 'The event is here!'
       : `${Math.floor(d / 864e5)} days · ${Math.floor(d % 864e5 / 36e5)} hours · ${Math.floor(d % 36e5 / 6e4)} minutes to go`;
   };
   tick();
@@ -646,7 +662,7 @@ function buildRow() {
   const text = a => edited ? (a.answer ? `${a.question}\n${a.answer}` : '') : a.answer;
   ANSWER_COLUMNS.forEach((col, i) => {
     const part = i < ANSWER_COLUMNS.length - 1 ? answers.slice(i, i + 1) : answers.slice(i);
-    row[col] = part.map(text).filter(Boolean).join('\n\n');
+    row[col] = part.map(text).filter(Boolean).join('\n\n').slice(0, 3000);   // the column's limit; "answers" keeps it all
   });
   return { row, answers };
 }
@@ -688,14 +704,30 @@ $('#again').addEventListener('click', () => {
   form.hidden = false;
   step = 'ready';
   if (guide) show('ready');
-  $('#a0').focus();
+  focusFirst();
 });
+
+// Answers are kept on this phone while someone types, so a refresh or a
+// closed tab doesn't lose them. Cleared once sent or on "Not you?".
+const DRAFT_KEY = 'beyondTheBadgeDraft';
+function saveDraft() {
+  if (S.preview) return;
+  const a = questions.map((_, i) => $('#a' + i).value);
+  try { a.some(Boolean) ? localStorage.setItem(DRAFT_KEY, JSON.stringify({ q: questions, a })) : localStorage.removeItem(DRAFT_KEY); } catch (e) {}
+}
+function clearDraft() { try { localStorage.removeItem(DRAFT_KEY); } catch (e) {} }
+form.addEventListener('input', saveDraft);
+try {
+  const d = S.preview ? null : JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null');
+  if (d && sameQuestions(d.q, questions)) d.a.forEach((v, i) => { $('#a' + i).value = v; });
+} catch (e) {}
 
 form.addEventListener('submit', async e => {
   e.preventDefault();
   const { row, answers } = buildRow();
   if (!answers.some(a => a.answer)) { message.textContent = 'Please answer at least one question before submitting.'; return; }
-  if (S.preview) { message.textContent = ''; form.reset(); finale(); return; }
+  // the hidden "website" box is only ever filled in by spam robots
+  if (S.preview || $('#website').value) { message.textContent = ''; form.reset(); finale(); return; }
   const button = $('#submitBtn');
   button.disabled = true;
   message.textContent = 'Sending…';
@@ -703,6 +735,7 @@ form.addEventListener('submit', async e => {
     await send(row, answers);
     message.textContent = '';
     form.reset();
+    clearDraft();
     finale();
   } catch (err) {
     message.textContent = 'Sorry, your response could not be sent. Please try again.';

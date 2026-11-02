@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Event Page Settings</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 2c6 4 15 5 24 2l6 6c-4 8-3 17 1 23-1 15-12 24-31 29C13 57 2 48 1 33c4-6 5-15 1-23l6-6c9 3 18 2 24-2z' fill='%23b8862f'/%3E%3Cpath d='M32 18l4 9 10 1-7 7 2 10-9-5-9 5 2-10-7-7 10-1z' fill='%231f2a4a'/%3E%3C/svg%3E">
 <style>
 :root{
   --bg:#f4f3f0;--panel:#fff;--line:#e4e1db;--line-strong:#cfccc5;--ink:#1f2329;--muted:#6b7079;--brand:#1f3a5f;--brand-soft:#e8eef5;
@@ -172,8 +174,8 @@ code{font:12px ui-monospace,Menlo,monospace;background:#f3f2ef;padding:1px 5px;b
 <header class="top">
   <h1>Event Page Settings</h1>
   <nav class="tabs" role="tablist" aria-label="Sections">
-    <button type="button" class="tab" role="tab" data-view="settings" aria-selected="true">Page</button>
-    <button type="button" class="tab" role="tab" data-view="responses" aria-selected="false">Responses</button>
+    <button type="button" class="tab" role="tab" data-view="settings" aria-selected="true" aria-controls="settingsView">Page</button>
+    <button type="button" class="tab" role="tab" data-view="responses" aria-selected="false" aria-controls="responsesView">Responses<span id="respBadge"></span></button>
   </nav>
   <div class="actions">
     <span class="who" id="whoSigned"></span>
@@ -187,7 +189,7 @@ code{font:12px ui-monospace,Menlo,monospace;background:#f3f2ef;padding:1px 5px;b
     <details class="sec" data-sec="theme">
       <summary><span class="sec-title">Theme</span><span class="sec-sum" id="sumTheme"></span><span class="chev"></span></summary>
       <div class="sec-body">
-        <p class="hint">Automatic switches to the holiday of whatever month it is. Pick one to lock it.</p>
+        <p class="hint">Automatic switches to the holiday of the month the page is opened in, so a printed QR code changes look over time. Pick a theme to lock it for a printed card.</p>
         <div class="themes" id="themes"></div>
       </div>
     </details>
@@ -312,8 +314,8 @@ code{font:12px ui-monospace,Menlo,monospace;background:#f3f2ef;padding:1px 5px;b
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="config.js?v=6"></script>
-<script src="themes.js?v=6"></script>
+<script src="config.js?v=7"></script>
+<script src="themes.js?v=7"></script>
 <script src="assets/qrcode-generator.js"></script>
 <script>
 const $ = s => document.querySelector(s);
@@ -339,18 +341,25 @@ function load(from) {
 }
 // Saved in this browser right away, and in the database (page_settings) a
 // moment later, so the settings are the same on every organizer's device.
-let saveTimer, organizer = '';
+let saveTimer, organizer = '', unsaved = false;
 function status(text, bad) { $('#saved').textContent = text; $('#saved').classList.toggle('bad', !!bad); }
 function save() {
   try { localStorage.setItem(STORE, JSON.stringify(s)); } catch (e) {}
   if (!organizer) return;
+  unsaved = true;
   status('Saving…');
   clearTimeout(saveTimer);
-  saveTimer = setTimeout(async () => {
-    const { error } = await db.from('page_settings').upsert({ id: 1, data: s, updated_at: new Date().toISOString(), updated_by: organizer });
-    status(error ? 'Not saved online. Check the connection; it will retry on the next change.' : 'Saved.', !!error);
-  }, 800);
+  saveTimer = setTimeout(push, 600);
 }
+async function push(retry) {
+  const { error } = await db.from('page_settings').upsert({ id: 1, data: s, updated_at: new Date().toISOString(), updated_by: organizer });
+  if (!error) { unsaved = false; return status('Saved.'); }
+  status('Not saved online yet. Trying again…', true);
+  if (!retry) saveTimer = setTimeout(() => push(true), 5000);
+  else status('Not saved online. Check the connection; it saves again on your next change.', true);
+}
+// warn before closing the tab while a change hasn't reached the database
+addEventListener('beforeunload', e => { if (unsaved) { e.preventDefault(); e.returnValue = ''; } });
 
 // ---- sections: remember which ones are open ------------------------------------
 const secs = document.querySelectorAll('.sec');
@@ -755,6 +764,7 @@ async function enter(session) {
   $('#gate').hidden = true;
   $('#app').hidden = false;
   fill();
+  loadResponses();    // so the Responses tab shows its count right away
   if (!row) save();   // first organizer to sign in: keep what this browser had
   else status('Saved.');
 }
@@ -790,7 +800,7 @@ $('#newPasswordForm').addEventListener('submit', async e => {
   const { data: { session } } = await db.auth.getSession();
   enter(session);
 });
-async function signOut() { await db.auth.signOut(); location.replace(location.pathname); }
+async function signOut() { unsaved = false; await db.auth.signOut(); location.replace(location.pathname); }
 $('#signOut').addEventListener('click', signOut);
 $('#gateSignOut').addEventListener('click', signOut);
 
@@ -824,6 +834,7 @@ async function loadResponses() {
   if (error) { $('#respCount').textContent = 'Couldn’t load responses. Try Refresh.'; return; }
   responsesLoaded = true;
   responses = data.map(normalize).sort((a, b) => (b.when || 0) - (a.when || 0));
+  $('#respBadge').textContent = ` (${responses.length})`;
   renderResponses();
 }
 function shown() {

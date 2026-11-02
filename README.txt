@@ -13,10 +13,14 @@ FILES
                  bottom of the sign-up page.
   config.js      Supabase address and publishable key, and the online page
                  address. Shared by both pages.
-  supabase/setup.sql  One-time database setup (see ORGANIZER LOGIN).
+  supabase/setup.sql  One-time database setup (see ORGANIZER LOGIN). Done.
+  supabase/hardening.sql  Extra tightening: size limits on the email and
+                 answers columns, and removes table access nobody needs.
+                 Run each statement on its own in the SQL Editor.
+  assets/share.png  The picture shown when the link is shared by text or chat.
   themes.js      The holiday themes and the mascots, shared by both pages.
                  Edit a theme's colors, title, decorations or runaway here.
-                 After editing it, raise the number in "themes.js?v=6" in
+                 After editing it, raise the number in "themes.js?v=7" in
                  index.html and settings.html so phones don't keep the old copy.
   assets/
     source/      The supplied art, unchanged:
@@ -81,8 +85,11 @@ MASCOTS
 SIGN-IN AND SUBMISSIONS
   Visitors sign in with their name (required) and email (optional) before
   the questions appear. Both are remembered on their phone and saved with
-  every response ("Not you?" switches person). Visitors have no password;
-  this only records who they are.
+  every response ("Not you?" switches person and clears the answer boxes,
+  for a shared phone or tablet). Visitors have no password; this only
+  records who they are. Answers in progress are kept on the phone until
+  they're sent, so a refresh doesn't lose them. A hidden box catches spam
+  robots: anything that fills it in is thanked but not saved.
   Responses go to the Supabase table thanksgiving_responses. The first four
   answers go into the original columns (coworker_thanks, smiling_moment,
   team_thanks, looking_forward). If the questions were edited, each column
