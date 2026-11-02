@@ -3,169 +3,272 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Event page settings</title>
+<title>Event Page Settings</title>
 <style>
+:root{
+  --bg:#f4f3f0;--panel:#fff;--line:#e4e1db;--line-strong:#cfccc5;--ink:#1f2329;--muted:#6b7079;--brand:#1f3a5f;--brand-soft:#e8eef5;
+  --ok:#2e7d46;--warn-bg:#fff4e0;--warn-line:#f0d49b;--warn-ink:#6b4b10;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --serif:Georgia,"Times New Roman",serif;
+  --r:12px;
+}
 *{box-sizing:border-box}
-body{margin:0;background:#f2f1ee;color:#1f2329;font:15px/1.5 Arial,sans-serif}
-header.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 24px;background:#fff;border-bottom:1px solid #e3e1dc;position:sticky;top:0;z-index:5}
-header.top h1{font:700 19px Georgia,serif;margin:0}
-header.top .hint{color:#6a6f78;font-size:13px}
-.layout{display:grid;grid-template-columns:minmax(0,1fr) 430px;gap:24px;max-width:1240px;margin:0 auto;padding:24px}
-@media (max-width:980px){.layout{grid-template-columns:1fr;padding:16px}}
-.panel{background:#fff;border:1px solid #e3e1dc;border-radius:14px;padding:20px 22px;margin-bottom:18px}
-.panel h2{font:700 16px Georgia,serif;margin:0 0 4px}
-.panel .sub{color:#6a6f78;font-size:13px;margin:0 0 14px}
-label.field{display:block;font-weight:700;font-size:13px;margin:14px 0 6px}
-input[type=text],input[type=url],input[type=datetime-local],textarea{width:100%;font:15px Arial,sans-serif;padding:10px 12px;border:1px solid #cfccc5;border-radius:9px;background:#fff;color:#1f2329}
-textarea{min-height:64px;resize:vertical}
-input:focus,textarea:focus{outline:2px solid #2f5d8a;outline-offset:1px}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--sans);-webkit-font-smoothing:antialiased}
+button,input,textarea{font:inherit;color:inherit}
+[hidden]{display:none!important}
 
-.themes{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:10px}
-.swatch{position:relative;text-align:left;border:2px solid transparent;border-radius:12px;padding:10px 10px 9px;cursor:pointer;font:600 13px Arial,sans-serif;color:#1f2329;min-height:74px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
-.swatch .icons{font-size:20px;letter-spacing:2px;display:block;margin-bottom:6px;min-height:24px}
-.swatch .when{display:block;font-weight:400;font-size:11px;color:#4b4f57;margin-top:2px}
-.swatch[aria-pressed="true"]{border-color:#1f2329;box-shadow:0 0 0 3px rgba(31,35,41,.12)}
+/* ---- top bar ---- */
+.top{position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 24px;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.top h1{font:700 18px/1.2 var(--serif);margin:0}
+.top p{margin:2px 0 0;color:var(--muted);font-size:13px}
+.top .actions{display:flex;gap:8px;flex-shrink:0}
+
+/* ---- layout ---- */
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:24px;max-width:1200px;margin:0 auto;padding:24px}
+.preview-col{position:sticky;top:88px;align-self:start}
+@media (max-width:980px){
+  .layout{grid-template-columns:1fr;padding:16px}
+  .preview-col{position:static}
+  .top{padding:12px 16px}
+  .top p{display:none}
+}
+
+/* ---- collapsible sections ---- */
+.sec{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);margin-bottom:12px;overflow:hidden}
+.sec > summary{display:flex;align-items:center;gap:12px;padding:16px 20px;cursor:pointer;list-style:none;user-select:none}
+.sec > summary::-webkit-details-marker{display:none}
+.sec > summary:hover{background:#faf9f7}
+.sec > summary:focus-visible{outline:2px solid var(--brand);outline-offset:-2px}
+.sec-title{font-weight:700;font-size:15px}
+.sec-sum{flex:1;min-width:0;color:var(--muted);font-size:13px;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chev{width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg) translateY(-2px);transition:transform .2s;flex-shrink:0}
+.sec[open] > summary .chev{transform:rotate(225deg) translateY(-2px)}
+.sec[open] > summary{border-bottom:1px solid var(--line)}
+.sec-body{padding:4px 20px 20px}
+
+/* ---- fields ---- */
+.field{display:block;margin-top:16px}
+.field > span{display:block;font-weight:600;font-size:13px;margin-bottom:6px}
+.hint{color:var(--muted);font-size:13px;margin:6px 0 0}
+input[type=text],input[type=url],input[type=datetime-local],textarea{width:100%;padding:9px 12px;border:1px solid var(--line-strong);border-radius:8px;background:#fff;transition:border-color .15s,box-shadow .15s}
+textarea{min-height:44px;resize:vertical;line-height:1.4}
+input:focus,textarea:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
+.pills{display:flex;flex-wrap:wrap;gap:8px}
+.pill{display:inline-flex;align-items:center;gap:8px;padding:7px 12px;border:1px solid var(--line-strong);border-radius:999px;cursor:pointer;font-size:14px;background:#fff}
+.pill input{margin:0;accent-color:var(--brand)}
+.pill:has(input:checked){border-color:var(--brand);background:var(--brand-soft);font-weight:600}
+.pill:has(input:focus-visible){outline:2px solid var(--brand);outline-offset:2px}
+.mascot-thumb{height:36px;width:auto}
+.color-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.color-row input[type=color]{width:40px;height:32px;border:1px solid var(--line-strong);border-radius:8px;padding:2px;background:#fff}
+.color-row input[type=color]:disabled{opacity:.45}
+
+/* ---- theme swatches ---- */
+.themes{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin-top:12px}
+.swatch{text-align:left;border:2px solid transparent;border-radius:10px;padding:10px;cursor:pointer;font-weight:600;font-size:13px;line-height:1.3;min-height:72px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
+.swatch .icons{display:block;font-size:18px;letter-spacing:2px;min-height:24px;margin-bottom:4px}
+.swatch .when{display:block;font-weight:400;font-size:11px;color:#4b4f57}
+.swatch[aria-pressed="true"]{border-color:var(--ink)}
 .swatch.auto{background:#fff}
 
-.choices{display:flex;flex-wrap:wrap;gap:8px}
-.choice{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid #cfccc5;border-radius:999px;cursor:pointer;font-size:14px;background:#fff}
-.choice input{margin:0}
-.choice:has(input:checked){border-color:#1f2329;background:#f3f2ef;font-weight:700}
-.color-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.color-row input[type=color]{width:44px;height:34px;border:1px solid #cfccc5;border-radius:8px;padding:2px;background:#fff}
-.mascot-thumb{height:40px;width:auto;display:inline-block}
+/* ---- question editor ---- */
+.qlist{list-style:none;margin:12px 0 0;padding:0;counter-reset:q}
+.qrow{display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid var(--line)}
+.qrow:last-child{border-bottom:0}
+.qnum{flex:0 0 24px;height:24px;margin-top:8px;border-radius:50%;background:var(--brand);color:#fff;font:700 12px/24px var(--sans);text-align:center}
+.qrow textarea{flex:1;min-height:40px}
+.qtools{display:flex;gap:2px;margin-top:4px}
+.icon-btn{width:32px;height:32px;display:grid;place-items:center;border:1px solid transparent;border-radius:8px;background:none;cursor:pointer;color:var(--muted);font-size:15px}
+.icon-btn:hover:not(:disabled){background:#f3f2ef;color:var(--ink);border-color:var(--line)}
+.icon-btn:disabled{opacity:.3;cursor:default}
+.icon-btn.danger:hover:not(:disabled){color:#b3261e}
+.qfoot{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:12px}
 
-.preview-col{position:sticky;top:86px;align-self:start}
-@media (max-width:980px){.preview-col{position:static}}
-.phone{width:375px;max-width:100%;height:700px;margin:0 auto;border:10px solid #1f2329;border-radius:36px;overflow:hidden;background:#fff;box-shadow:0 18px 40px rgba(0,0,0,.18)}
-.phone iframe{width:100%;height:100%;border:0;display:block}
-.preview-col .caption{text-align:center;color:#6a6f78;font-size:12px;margin:10px 0 0}
-
-.btn{display:inline-flex;align-items:center;gap:6px;padding:10px 14px;border-radius:9px;border:1px solid #cfccc5;background:#fff;color:#1f2329;font:700 14px Arial,sans-serif;cursor:pointer;text-decoration:none}
-.btn.primary{background:#1f2329;border-color:#1f2329;color:#fff}
+/* ---- buttons ---- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 14px;border-radius:8px;border:1px solid var(--line-strong);background:#fff;font-weight:600;font-size:14px;cursor:pointer;text-decoration:none;color:var(--ink);white-space:nowrap}
+.btn:hover{background:#f7f6f3}
+.btn.primary{background:var(--brand);border-color:var(--brand);color:#fff}
+.btn.primary:hover{filter:brightness(1.12)}
+.btn:disabled{opacity:.45;cursor:default}
+.link-btn{background:none;border:0;padding:0;color:var(--brand);font-size:13px;text-decoration:underline;cursor:pointer}
 .btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
-.link-out{font:13px ui-monospace,Menlo,monospace;background:#f3f2ef;border-radius:9px;padding:10px 12px;word-break:break-all;margin-top:8px}
-.warn{background:#fff4e0;border:1px solid #f0d49b;color:#6b4b10;border-radius:9px;padding:10px 12px;font-size:13px;margin-top:10px}
-.warn[hidden]{display:none}
-#card{display:block;width:100%;max-width:420px;height:auto;margin:6px auto 0;border-radius:12px;box-shadow:0 10px 26px rgba(0,0,0,.15)}
-.saved{font-size:12px;color:#2e7d46}
+
+/* ---- share ---- */
+.link-out{font:12px/1.5 ui-monospace,Menlo,monospace;background:#f3f2ef;border-radius:8px;padding:10px 12px;word-break:break-all;margin-top:12px;max-height:96px;overflow:auto}
+.warn{background:var(--warn-bg);border:1px solid var(--warn-line);color:var(--warn-ink);border-radius:8px;padding:10px 12px;font-size:13px;margin-top:12px}
+#card{display:block;width:100%;max-width:360px;height:auto;margin:16px auto 0;border-radius:10px;box-shadow:0 10px 26px rgba(0,0,0,.14)}
+
+/* ---- preview ---- */
+.phone{width:360px;max-width:100%;height:min(720px,calc(100vh - 140px));min-height:520px;margin:0 auto;border:10px solid var(--ink);border-radius:36px;overflow:hidden;background:#fff;box-shadow:0 18px 40px rgba(0,0,0,.16)}
+.phone iframe{width:100%;height:100%;border:0;display:block}
+.caption{text-align:center;color:var(--muted);font-size:12px;margin:10px 0 0}
+.saved{color:var(--ok)}
 </style>
 </head>
 <body>
 <header class="top">
   <div>
-    <h1>Event page settings</h1>
-    <div class="hint">Changes show in the phone preview right away and are saved on this computer.</div>
+    <h1>Event Page Settings</h1>
+    <p>Changes appear in the preview right away and are saved on this computer.</p>
   </div>
-  <button type="button" class="btn" id="reset">Start over</button>
+  <div class="actions">
+    <a class="btn" id="openTop" target="_blank" rel="noopener">Open page</a>
+    <button type="button" class="btn" id="reset">Start over</button>
+  </div>
 </header>
 
 <div class="layout">
-  <div>
-    <section class="panel">
-      <h2>Theme</h2>
-      <p class="sub">Automatic switches to the holiday of whatever month it is. Pick one to lock it.</p>
-      <div class="themes" id="themes"></div>
-    </section>
+  <div id="sections">
+    <details class="sec" data-sec="theme">
+      <summary><span class="sec-title">Theme</span><span class="sec-sum" id="sumTheme"></span><span class="chev"></span></summary>
+      <div class="sec-body">
+        <p class="hint">Automatic switches to the holiday of whatever month it is. Pick one to lock it.</p>
+        <div class="themes" id="themes"></div>
+      </div>
+    </details>
 
-    <section class="panel">
-      <h2>Words</h2>
-      <label class="field" for="eyebrow">Small line above the title</label>
-      <input type="text" id="eyebrow">
-      <label class="field" for="title">Big title</label>
-      <input type="text" id="title" placeholder="">
-      <label class="field" for="subtitle">Line under the title</label>
-      <textarea id="subtitle"></textarea>
-      <label class="field" for="date">Event date and time (optional, shows a countdown)</label>
-      <input type="datetime-local" id="date">
-    </section>
+    <details class="sec" data-sec="header">
+      <summary><span class="sec-title">Title and date</span><span class="sec-sum" id="sumHeader"></span><span class="chev"></span></summary>
+      <div class="sec-body">
+        <label class="field"><span>Small line above the title</span><input type="text" id="eyebrow"></label>
+        <label class="field"><span>Title</span><input type="text" id="title"></label>
+        <label class="field"><span>Line under the title</span><textarea id="subtitle" rows="2"></textarea></label>
+        <label class="field"><span>Event date and time</span><input type="datetime-local" id="date"></label>
+        <p class="hint">Optional. Shows a countdown under the title.</p>
+      </div>
+    </details>
 
-    <section class="panel">
-      <h2>Background</h2>
-      <div class="choices" id="background">
-        <label class="choice"><input type="radio" name="background" value="fall"> Falling decorations</label>
-        <label class="choice"><input type="radio" name="background" value="still"> Still decorations</label>
-        <label class="choice"><input type="radio" name="background" value="plain"> Plain</label>
+    <details class="sec" data-sec="questions" open>
+      <summary><span class="sec-title">Sign-in and questions</span><span class="sec-sum" id="sumQuestions"></span><span class="chev"></span></summary>
+      <div class="sec-body">
+        <label class="field"><span>Sign-in message</span><input type="text" id="signIn"></label>
+        <p class="hint">Everyone signs in with their name before the questions appear. The name is saved with their answers.</p>
+        <label class="field"><span>Line above the questions</span><input type="text" id="intro"></label>
+        <div class="field"><span>Questions</span></div>
+        <ol class="qlist" id="qlist"></ol>
+        <div class="qfoot">
+          <button type="button" class="btn" id="addQ">+ Add a question</button>
+          <button type="button" class="link-btn" id="resetQ">Use the original questions</button>
+        </div>
+        <p class="hint">Up to 8. Longer questions make the QR code more detailed, so print it a little bigger.</p>
       </div>
-      <label class="field">Background color</label>
-      <div class="color-row">
-        <label class="choice"><input type="checkbox" id="bgThemed" checked> Use the theme's colors</label>
-        <input type="color" id="bgColor" value="#f8e6c9" aria-label="Background color">
-      </div>
-      <label class="field">Highlight color</label>
-      <div class="color-row">
-        <label class="choice"><input type="checkbox" id="acThemed" checked> Use the theme's color</label>
-        <input type="color" id="accent" value="#c4622d" aria-label="Highlight color">
-      </div>
-    </section>
+    </details>
 
-    <section class="panel">
-      <h2>Guide and chase</h2>
-      <p class="sub">The guide rides along at the bottom of the screen and reacts to each question.</p>
-      <div class="choices" id="mascot"></div>
-      <label class="field">Chase between questions</label>
-      <div class="choices">
-        <label class="choice"><input type="checkbox" id="chase" checked> The guide chases the theme's runaway between questions</label>
+    <details class="sec" data-sec="after">
+      <summary><span class="sec-title">After they submit</span><span class="sec-sum" id="sumAfter"></span><span class="chev"></span></summary>
+      <div class="sec-body">
+        <label class="field"><span>Button</span><input type="text" id="button"></label>
+        <label class="field"><span>Thank-you message</span><textarea id="thanks" rows="2"></textarea></label>
       </div>
-      <p class="sub" id="chaseNote" style="margin-top:8px"></p>
-    </section>
+    </details>
 
-    <section class="panel">
-      <h2>Link and QR code</h2>
-      <label class="field" for="base">Page address</label>
-      <input type="url" id="base">
-      <div class="warn" id="localWarn" hidden>This address only works on this computer. Phones that scan the code won't be able to open it until the page is hosted somewhere public. Once it is, put that address here.</div>
-      <div class="link-out" id="linkOut"></div>
-      <div class="btn-row">
-        <button type="button" class="btn" id="copy">Copy link</button>
-        <a class="btn" id="open" target="_blank" rel="noopener">Open page</a>
+    <details class="sec" data-sec="look">
+      <summary><span class="sec-title">Background and colors</span><span class="sec-sum" id="sumLook"></span><span class="chev"></span></summary>
+      <div class="sec-body">
+        <div class="field"><span>Background</span>
+          <div class="pills">
+            <label class="pill"><input type="radio" name="background" value="fall"> Falling decorations</label>
+            <label class="pill"><input type="radio" name="background" value="still"> Still decorations</label>
+            <label class="pill"><input type="radio" name="background" value="plain"> Plain</label>
+          </div>
+        </div>
+        <div class="field"><span>Background color</span>
+          <div class="color-row">
+            <label class="pill"><input type="checkbox" id="bgThemed" checked> Theme's color</label>
+            <input type="color" id="bgColor" value="#f8e6c9" aria-label="Background color">
+          </div>
+        </div>
+        <div class="field"><span>Highlight color</span>
+          <div class="color-row">
+            <label class="pill"><input type="checkbox" id="acThemed" checked> Theme's color</label>
+            <input type="color" id="accent" value="#c4622d" aria-label="Highlight color">
+          </div>
+        </div>
       </div>
+    </details>
 
-      <label class="field" for="cta">Words under the QR code</label>
-      <input type="text" id="cta">
-      <label class="field">QR code shape</label>
-      <div class="choices">
-        <label class="choice"><input type="radio" name="qrShape" value="badge"> Badge</label>
-        <label class="choice"><input type="radio" name="qrShape" value="circle"> Circle</label>
-        <label class="choice"><input type="radio" name="qrShape" value="square"> Square</label>
+    <details class="sec" data-sec="guide">
+      <summary><span class="sec-title">Guide and chase</span><span class="sec-sum" id="sumGuide"></span><span class="chev"></span></summary>
+      <div class="sec-body">
+        <p class="hint">The guide rides along at the bottom of the screen and reacts to each question.</p>
+        <div class="field"><span>Guide</span><div class="pills" id="mascot"></div></div>
+        <div class="field"><span>Chase</span>
+          <label class="pill"><input type="checkbox" id="chase" checked> Chase scenes between questions</label>
+        </div>
+        <p class="hint" id="chaseNote"></p>
       </div>
-      <canvas id="card" width="1200" height="1600" aria-label="Themed QR code card"></canvas>
-      <div class="btn-row">
-        <button type="button" class="btn primary" id="download">Download QR card (PNG)</button>
-        <button type="button" class="btn" id="downloadQr">Download QR code only</button>
-        <button type="button" class="btn" id="print">Print</button>
+    </details>
+
+    <details class="sec" data-sec="share" open>
+      <summary><span class="sec-title">Link and QR code</span><span class="sec-sum" id="sumShare"></span><span class="chev"></span></summary>
+      <div class="sec-body">
+        <label class="field"><span>Page address</span><input type="url" id="base"></label>
+        <div class="warn" id="localWarn" hidden>This address only works on this computer. Phones that scan the code won't be able to open it.</div>
+        <div class="link-out" id="linkOut"></div>
+        <p class="hint" id="linkSize"></p>
+        <div class="btn-row">
+          <button type="button" class="btn" id="copy">Copy link</button>
+          <a class="btn" id="open" target="_blank" rel="noopener">Open page</a>
+        </div>
+        <label class="field"><span>Words under the QR code</span><input type="text" id="cta"></label>
+        <div class="field"><span>QR code shape</span>
+          <div class="pills">
+            <label class="pill"><input type="radio" name="qrShape" value="badge"> Badge</label>
+            <label class="pill"><input type="radio" name="qrShape" value="circle"> Circle</label>
+            <label class="pill"><input type="radio" name="qrShape" value="square"> Square</label>
+          </div>
+        </div>
+        <canvas id="card" width="1200" height="1600" aria-label="Themed QR code card"></canvas>
+        <div class="btn-row" style="justify-content:center">
+          <button type="button" class="btn primary" id="download">Download QR card</button>
+          <button type="button" class="btn" id="downloadQr">QR code only</button>
+          <button type="button" class="btn" id="print">Print</button>
+        </div>
       </div>
-    </section>
+    </details>
   </div>
 
   <div class="preview-col">
     <div class="phone"><iframe id="preview" title="Phone preview of the event page"></iframe></div>
-    <p class="caption">Live preview. Responses typed here are not sent. <span class="saved" id="saved"></span></p>
+    <p class="caption">Live preview. Nothing typed here is sent. <span class="saved" id="saved"></span></p>
   </div>
 </div>
 
-<script src="themes.js?v=4"></script>
+<script src="themes.js?v=5"></script>
 <script src="assets/qrcode-generator.js"></script>
 <script>
 const $ = s => document.querySelector(s);
-const STORE = 'eventPageSettings';
+const STORE = 'eventPageSettings', OPEN_STORE = 'eventPageSettingsOpen';
 // Where the page lives online (GitHub Pages). QR codes point here even when this
 // settings page is opened from a copy on this computer.
 const PUBLIC_PAGE = 'https://youngpro718.github.io/beyond-the-badge/index.html';
 const isLocal = url => /^(file:|https?:\/\/(localhost|127\.|0\.0\.0\.0|\[::1\]))/.test(url);
 const here = location.href.replace(/settings\.html.*$/, 'index.html');
 const defaultBase = isLocal(here) ? PUBLIC_PAGE : here;
+const TEXT_FIELDS = ['eyebrow', 'title', 'subtitle', 'date', 'signIn', 'intro', 'button', 'thanks', 'base', 'cta'];
 
 let s = load();
 function load() {
   let saved = {};
   try { saved = JSON.parse(localStorage.getItem(STORE) || '{}'); } catch (e) {}
   if (!saved.base || isLocal(saved.base)) delete saved.base;   // an address that only works on this computer
-  return Object.assign({}, DEFAULTS, { base: defaultBase }, saved);
+  const out = Object.assign({}, DEFAULTS, { base: defaultBase }, saved);
+  out.questions = Array.isArray(out.questions) && out.questions.length ? out.questions.slice(0, MAX_QUESTIONS) : QUESTIONS.slice();
+  return out;
 }
 function save() {
   try { localStorage.setItem(STORE, JSON.stringify(s)); $('#saved').textContent = 'Saved.'; } catch (e) {}
 }
+
+// ---- sections: remember which ones are open ------------------------------------
+const secs = document.querySelectorAll('.sec');
+try {
+  const open = JSON.parse(localStorage.getItem(OPEN_STORE) || 'null');
+  if (Array.isArray(open)) secs.forEach(d => d.open = open.includes(d.dataset.sec));
+} catch (e) {}
+secs.forEach(d => d.addEventListener('toggle', () => {
+  try { localStorage.setItem(OPEN_STORE, JSON.stringify([...secs].filter(x => x.open).map(x => x.dataset.sec))); } catch (e) {}
+}));
 
 // ---- theme swatches -----------------------------------------------------------
 const thisMonth = THEMES[MONTH_THEMES[new Date().getMonth()]];
@@ -188,60 +291,113 @@ function buildSwatches() {
   make('navy', THEMES.navy, THEMES.navy.name, 'Any event');
 }
 
-// ---- mascot choices -------------------------------------------------------------
+// ---- guide choices --------------------------------------------------------------
 function buildMascots() {
-  const box = $('#mascot');
-  const opts = [['auto', 'Picks one for each person'], ...Object.entries(MASCOTS).map(([k, m]) => [k, m.label]), ['choose', 'Let them choose'], ['none', 'No guide']];
-  box.innerHTML = opts.map(([v, label]) => {
+  const opts = [['auto', 'Pick one for each person'], ...Object.entries(MASCOTS).map(([k, m]) => [k, m.label]), ['choose', 'Let them choose'], ['none', 'No guide']];
+  $('#mascot').innerHTML = opts.map(([v, label]) => {
     const thumb = MASCOTS[v] ? `<img class="mascot-thumb" src="${MASCOTS[v].guide.hello}" alt="">` : '';
-    return `<label class="choice"><input type="radio" name="mascot" value="${v}">${thumb}${label}</label>`;
+    return `<label class="pill"><input type="radio" name="mascot" value="${v}">${thumb}${label}</label>`;
   }).join('');
 }
+
+// ---- question editor ----------------------------------------------------------
+function buildQuestions() {
+  const list = $('#qlist');
+  list.replaceChildren();
+  s.questions.forEach((q, i) => {
+    const li = document.createElement('li');
+    li.className = 'qrow';
+    li.innerHTML = `<span class="qnum">${i + 1}</span>
+      <textarea rows="1" aria-label="Question ${i + 1}" maxlength="200"></textarea>
+      <span class="qtools">
+        <button type="button" class="icon-btn" data-act="up" aria-label="Move question ${i + 1} up" ${i === 0 ? 'disabled' : ''}>↑</button>
+        <button type="button" class="icon-btn" data-act="down" aria-label="Move question ${i + 1} down" ${i === s.questions.length - 1 ? 'disabled' : ''}>↓</button>
+        <button type="button" class="icon-btn danger" data-act="remove" aria-label="Remove question ${i + 1}" ${s.questions.length === 1 ? 'disabled' : ''}>✕</button>
+      </span>`;
+    const ta = li.querySelector('textarea');
+    ta.value = q;
+    ta.addEventListener('input', () => { s.questions[i] = ta.value; fit(ta); refresh(); save(); });
+    li.querySelector('.qtools').addEventListener('click', e => {
+      const act = e.target.closest('button') && e.target.closest('button').dataset.act;
+      if (!act) return;
+      const qs = s.questions;
+      if (act === 'up') [qs[i - 1], qs[i]] = [qs[i], qs[i - 1]];
+      if (act === 'down') [qs[i + 1], qs[i]] = [qs[i], qs[i + 1]];
+      if (act === 'remove') qs.splice(i, 1);
+      buildQuestions(); refresh(); save();
+      const focusAt = act === 'remove' ? Math.min(i, qs.length - 1) : act === 'up' ? i - 1 : i + 1;
+      const row = $('#qlist').children[focusAt], btn = row.querySelector(`[data-act="${act}"]`);
+      (btn.disabled ? row.querySelector('textarea') : btn).focus();   // keep the keyboard where it was
+    });
+    list.appendChild(li);
+    fit(ta);
+  });
+  $('#addQ').disabled = s.questions.length >= MAX_QUESTIONS;
+}
+// grow a textarea to fit its text
+function fit(ta) { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 2 + 'px'; }
+$('#addQ').addEventListener('click', () => {
+  if (s.questions.length >= MAX_QUESTIONS) return;
+  s.questions.push('');
+  buildQuestions(); refresh(); save();
+  $('#qlist').lastElementChild.querySelector('textarea').focus();
+});
+$('#resetQ').addEventListener('click', () => {
+  if (!confirm('Replace your questions with the original four?')) return;
+  s.questions = QUESTIONS.slice();
+  buildQuestions(); refresh(); save();
+});
 
 // ---- fill the form from saved settings ---------------------------------------
 function fill() {
   buildSwatches();
   buildMascots();
-  $('#eyebrow').value = s.eyebrow || '';
-  $('#title').value = s.title || '';
-  $('#subtitle').value = s.subtitle || '';
-  $('#date').value = s.date || '';
+  buildQuestions();
+  for (const k of TEXT_FIELDS) $('#' + k).value = s[k] || '';
+  $('#base').value = s.base || defaultBase;
+  $('#cta').value = s.cta || DEFAULTS.cta;
   document.querySelectorAll('input[name=background]').forEach(r => r.checked = r.value === s.background);
   document.querySelectorAll('input[name=mascot]').forEach(r => r.checked = r.value === s.mascot);
+  document.querySelectorAll('input[name=qrShape]').forEach(r => r.checked = r.value === s.qrShape);
   $('#bgThemed').checked = !s.bgColor; if (s.bgColor) $('#bgColor').value = s.bgColor;
   $('#acThemed').checked = !s.accent; if (s.accent) $('#accent').value = s.accent;
   $('#chase').checked = s.chase !== false;
-  $('#base').value = s.base || defaultBase;
-  $('#cta').value = s.cta || DEFAULTS.cta;
-  document.querySelectorAll('input[name=qrShape]').forEach(r => r.checked = r.value === s.qrShape);
   refresh();
 }
 
 function read() {
-  s.eyebrow = $('#eyebrow').value.trim();
-  s.title = $('#title').value.trim();
-  s.subtitle = $('#subtitle').value.trim();
-  s.date = $('#date').value;
-  s.background = (document.querySelector('input[name=background]:checked') || {}).value || 'fall';
-  s.mascot = (document.querySelector('input[name=mascot]:checked') || {}).value || 'auto';
+  for (const k of TEXT_FIELDS) s[k] = $('#' + k).value.trim();
+  s.base = s.base || defaultBase;
+  s.background = (document.querySelector('input[name=background]:checked') || {}).value || DEFAULTS.background;
+  s.mascot = (document.querySelector('input[name=mascot]:checked') || {}).value || DEFAULTS.mascot;
+  s.qrShape = (document.querySelector('input[name=qrShape]:checked') || {}).value || DEFAULTS.qrShape;
   s.bgColor = $('#bgThemed').checked ? '' : $('#bgColor').value;
   s.accent = $('#acThemed').checked ? '' : $('#accent').value;
   s.chase = $('#chase').checked;
-  s.base = $('#base').value.trim() || defaultBase;
-  s.cta = $('#cta').value.trim();
-  s.qrShape = (document.querySelector('input[name=qrShape]:checked') || {}).value || DEFAULTS.qrShape;
 }
 
 // ---- outputs -----------------------------------------------------------------
-let previewTimer;
+let previewTimer, cardTimer;
 function link() {
   const q = settingsToQuery(s);
   return s.base + (q ? (s.base.includes('?') ? '&' : '?') + q : '');
 }
+function summaries(t) {
+  const filled = s.questions.filter(q => q.trim()).length;
+  const mascot = MASCOTS[s.mascot] ? MASCOTS[s.mascot].label : { auto: 'Picked for each person', choose: 'They choose', none: 'No guide' }[s.mascot];
+  $('#sumTheme').textContent = s.theme === 'auto' ? `Automatic (${t.name})` : t.name;
+  $('#sumHeader').textContent = (s.title || t.headline) + (s.date ? ' · countdown on' : '');
+  $('#sumQuestions').textContent = `${filled} question${filled === 1 ? '' : 's'}` + (sameQuestions(s.questions, QUESTIONS) ? ' (original)' : '');
+  $('#sumAfter').textContent = s.button || DEFAULTS.button;
+  $('#sumLook').textContent = { fall: 'Falling decorations', still: 'Still decorations', plain: 'Plain' }[s.background] + (s.bgColor || s.accent ? ' · custom colors' : '');
+  $('#sumGuide').textContent = mascot + (s.chase && t.runner ? ` · chasing the ${t.runner.name}` : '');
+  $('#sumShare').textContent = { badge: 'Badge', circle: 'Circle', square: 'Square' }[s.qrShape] + ' QR code';
+}
 function refresh() {
   const t = resolveTheme(s.theme);
+  for (const k of ['eyebrow', 'subtitle', 'signIn', 'intro', 'button', 'thanks']) $('#' + k).placeholder = DEFAULTS[k];
   $('#title').placeholder = t.headline + ' (from the theme)';
-  // while "use the theme's colors" is ticked, show the theme's color and lock the picker
+  // while "theme's color" is ticked, show the theme's color and lock the picker
   $('#bgColor').disabled = $('#bgThemed').checked;
   $('#accent').disabled = $('#acThemed').checked;
   if ($('#bgThemed').checked) $('#bgColor').value = t.bg1;
@@ -249,10 +405,12 @@ function refresh() {
   $('#chaseNote').textContent = t.runner
     ? `${t.name}: the guide and an officer chase the ${t.runner.name}.`
     : `${t.name} has no chase, on purpose. A row of the theme's decorations goes between questions instead.`;
+  summaries(t);
 
   const url = link();
   $('#linkOut').textContent = url;
-  $('#open').href = url;
+  $('#open').href = $('#openTop').href = url;
+  $('#linkSize').textContent = url.length > 600 ? `The link is long (${url.length} characters). The QR code still works, but print it at least 3 inches wide.` : '';
   let full = s.base;
   try { full = new URL(s.base, location.href).href; } catch (e) {}
   $('#localWarn').hidden = !isLocal(full);
@@ -261,19 +419,21 @@ function refresh() {
   previewTimer = setTimeout(() => {
     const q = settingsToQuery(s);
     $('#preview').src = 'index.html?' + (q ? q + '&' : '') + 'preview=1';
-  }, 250);
-  drawCard();
+  }, 300);
+  clearTimeout(cardTimer);
+  cardTimer = setTimeout(drawCard, 120);
 }
 function changed() { read(); refresh(); save(); }
 
-document.querySelectorAll('input,textarea').forEach(el => {
-  el.addEventListener(el.type === 'text' || el.tagName === 'TEXTAREA' || el.type === 'url' ? 'input' : 'change', changed);
+document.querySelectorAll('#sections input, #sections textarea').forEach(el => {
+  if (el.closest('#qlist')) return;
+  el.addEventListener(['text', 'url', 'textarea'].includes(el.type) ? 'input' : 'change', changed);
 });
 $('#mascot').addEventListener('change', changed);
 $('#reset').addEventListener('click', () => {
-  if (!confirm('Reset every setting back to the defaults?')) return;
+  if (!confirm('Reset every setting, including the questions, back to the defaults?')) return;
   try { localStorage.removeItem(STORE); } catch (e) {}
-  s = Object.assign({}, DEFAULTS, { base: defaultBase });
+  s = load();
   fill(); save();
 });
 $('#copy').addEventListener('click', async () => {
@@ -288,8 +448,10 @@ function loadImg(src) {
   if (!imgCache[src]) imgCache[src] = new Promise(res => { const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = src; });
   return imgCache[src];
 }
+// Strong error correction while the link is short; longer links (edited
+// questions) step down so the dots stay big enough to scan.
 function qrMatrix(text) {
-  const qr = qrcode(0, 'Q');
+  const qr = qrcode(0, text.length < 260 ? 'Q' : text.length < 600 ? 'M' : 'L');
   qr.addData(text);
   qr.make();
   return qr;

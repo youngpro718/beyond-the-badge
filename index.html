@@ -5,11 +5,18 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Beyond the Badge</title>
 <style>
-/* Colors are set from the theme in themes.js; these are only the starting values. */
-:root{--bg1:#f8e6c9;--bg2:#e9b98a;--card:#fffaf2;--ink:#3a2a1c;--heading:#6b3415;--accent:#c4622d;--soft:#fbecd8;--field:#e2c9a8;--button:#7a3a17}
+/* Colors come from the theme in themes.js; these are only the starting values. */
+:root{
+  --bg1:#f8e6c9;--bg2:#e9b98a;--card:#fffaf2;--ink:#3a2a1c;--heading:#6b3415;--accent:#c4622d;--soft:#fbecd8;--field:#e2c9a8;--button:#7a3a17;
+  --serif:Georgia,"Times New Roman",serif;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --radius:20px;--shadow:0 6px 22px rgba(40,25,10,.08);
+}
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
-body{margin:0;min-height:100vh;color:var(--ink);font:17px/1.45 Georgia,serif;background:var(--bg1);overflow-x:hidden}
+body{margin:0;min-height:100vh;color:var(--ink);font:16px/1.5 var(--sans);background:var(--bg1);overflow-x:hidden;-webkit-font-smoothing:antialiased}
+button{font:inherit}
+[hidden]{display:none!important}
 
 /* ---- background ---- */
 .sky{position:fixed;inset:0;z-index:-2;background:linear-gradient(165deg,var(--bg1) 0%,var(--bg2) 100%)}
@@ -18,37 +25,65 @@ body{margin:0;min-height:100vh;color:var(--ink);font:17px/1.45 Georgia,serif;bac
 @keyframes fall{to{transform:translate3d(var(--drift),118vh,0) rotate(var(--spin))}}
 #decor.still .flake{animation:none;top:var(--top);opacity:.28}
 
-/* ---- page ---- */
-main{max-width:640px;margin:0 auto;padding:22px 16px 200px}
-.hero{position:relative;overflow:hidden;text-align:center;padding:30px 22px 26px;background:var(--card);border-radius:24px;box-shadow:0 10px 34px rgba(40,25,10,.12)}
-.hero::before{content:"";position:absolute;left:0;right:0;top:0;height:7px;background:var(--accent)}
-.hero-art{display:block;height:170px;width:auto;margin:0 auto 6px;transform-origin:50% 100%;animation:rise .8s cubic-bezier(.2,1.2,.4,1) both,sway 4s ease-in-out .8s infinite}
+/* ---- layout ---- */
+main{max-width:620px;margin:0 auto;padding:24px 16px 200px}
+.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:24px}
+.card + .card,.card + form,.signed + form{margin-top:16px}
+
+/* ---- header ---- */
+.hero{position:relative;overflow:hidden;text-align:center;padding:32px 24px 28px;box-shadow:0 10px 34px rgba(40,25,10,.12)}
+.hero::before{content:"";position:absolute;inset:0 0 auto;height:6px;background:var(--accent)}
+.hero-art{display:block;height:170px;width:auto;margin:0 auto 8px;transform-origin:50% 100%;animation:rise .8s cubic-bezier(.2,1.2,.4,1) both,sway 4s ease-in-out .8s infinite}
 @keyframes rise{from{opacity:0;transform:translateY(30px) scale(.9)}to{opacity:1;transform:none}}
 @keyframes sway{50%{transform:rotate(1.5deg) translateY(-2px)}}
 .hero-decor{font-size:30px;letter-spacing:10px;line-height:1;margin-bottom:12px}
 .hero-decor:empty{display:none}
-.eyebrow{font:700 12px Arial,sans-serif;letter-spacing:.22em;color:var(--accent);text-transform:uppercase}
-h1{font-size:clamp(38px,10.5vw,60px);line-height:1.04;margin:10px 0;color:var(--heading)}
-#subtitle{margin:0 auto;max-width:30em;opacity:.85}
-.countdown{display:none;margin:16px auto 0;padding:9px 16px;width:max-content;max-width:100%;border-radius:30px;background:var(--soft);color:var(--heading);font:700 14px Arial,sans-serif}
-.note{text-align:center;margin:22px 10px 6px;font:15px Arial,sans-serif;opacity:.8}
+.eyebrow{font:700 12px/1 var(--sans);letter-spacing:.2em;color:var(--accent);text-transform:uppercase}
+.eyebrow:empty{display:none}
+h1{font:700 clamp(36px,10vw,56px)/1.05 var(--serif);margin:12px 0;color:var(--heading)}
+.subtitle{margin:0 auto;max-width:30em;font-size:17px;opacity:.85}
+.subtitle:empty{display:none}
+.countdown{display:inline-block;margin-top:16px;padding:8px 16px;border-radius:999px;background:var(--soft);color:var(--heading);font:700 14px/1.3 var(--sans)}
+.countdown:empty{display:none}
 
-.q{background:var(--card);border-radius:20px;padding:20px 20px 22px;margin:12px 0;box-shadow:0 6px 22px rgba(40,25,10,.08);transition:transform .35s,box-shadow .35s}
+/* ---- sign in ---- */
+h2{font:700 22px/1.25 var(--serif);color:var(--heading);margin:0 0 4px}
+.lead{margin:0 0 16px;opacity:.8}
+.field-label{display:block;font-weight:600;font-size:14px;margin:0 0 6px}
+.row{display:flex;gap:8px}
+.row input{flex:1;min-width:0}
+@media (max-width:420px){.row{flex-direction:column}.row .btn{width:100%}}
+.signed{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:16px;font-size:14px}
+.signed .chip{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:999px;background:var(--card);box-shadow:var(--shadow)}
+.signed .dot{width:8px;height:8px;border-radius:50%;background:var(--accent)}
+.link-btn{background:none;border:0;padding:4px;color:var(--heading);text-decoration:underline;cursor:pointer;font-size:14px}
+
+/* ---- questions ---- */
+.note{text-align:center;margin:0 8px 16px;font-size:15px;opacity:.8}
+.note:empty{display:none}
+.q{background:var(--card);border-radius:var(--radius);padding:20px;margin:12px 0;box-shadow:var(--shadow);transition:transform .35s,box-shadow .35s}
 .q.current{transform:scale(1.015);box-shadow:0 12px 30px rgba(40,25,10,.14)}
-.q label{display:flex;gap:12px;align-items:flex-start;font-weight:bold;font-size:19px;line-height:1.35;margin-bottom:12px;color:var(--heading)}
-.num{flex:0 0 30px;height:30px;border-radius:50%;background:var(--accent);color:#fff;font:700 14px/30px Arial,sans-serif;text-align:center}
-textarea,input{width:100%;font:16px Arial,sans-serif;color:var(--ink);border:1.5px solid var(--field);border-radius:12px;padding:13px;background:#fff;transition:border-color .2s,box-shadow .2s}
+.q > label{display:flex;gap:12px;align-items:flex-start;font:700 19px/1.35 var(--serif);margin-bottom:12px;color:var(--heading)}
+.num{flex:0 0 28px;height:28px;margin-top:1px;border-radius:50%;background:var(--accent);color:#fff;font:700 14px/28px var(--sans);text-align:center}
+textarea,input{width:100%;font:16px/1.4 var(--sans);color:var(--ink);border:1.5px solid var(--field);border-radius:12px;padding:12px 14px;background:#fff;transition:border-color .2s,box-shadow .2s}
 textarea{min-height:110px;resize:vertical}
 textarea:focus,input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 4px var(--soft)}
-.submit-btn{width:100%;padding:17px;background:var(--button);color:#fff;font:700 17px Arial,sans-serif;border:0;border-radius:14px;cursor:pointer}
-.submit-btn:disabled{opacity:.6}
-#message{margin:14px 4px 0;font:15px/1.5 Arial,sans-serif;text-align:center}
-#message:empty{display:none}
+input[aria-invalid="true"]{border-color:#b3261e}
+.btn{padding:14px 20px;background:var(--button);color:#fff;font-weight:700;font-size:16px;border:0;border-radius:12px;cursor:pointer;transition:filter .2s,transform .1s}
+.btn:hover{filter:brightness(1.08)}
+.btn:active{transform:translateY(1px)}
+.btn:disabled{opacity:.6;cursor:default}
+.btn.wide{width:100%;padding:16px}
+.btn.quiet{background:var(--soft);color:var(--heading)}
+.message{margin:12px 4px 0;font-size:15px;text-align:center}
+.message:empty{display:none}
+.error{color:#b3261e;font-size:14px;margin:8px 0 0}
+.error:empty{display:none}
 
 /* ---- chase scenes between questions ---- */
 .lane{position:relative;height:128px;overflow:hidden;margin:0 -16px}
 .lane.divider{display:flex;align-items:center;justify-content:center;gap:18px;height:56px;font-size:22px;opacity:.55}
-.lane.rule{height:28px}
+.lane.rule{height:24px}
 .actor{position:absolute;left:0;bottom:6px;will-change:transform}
 .actor.fly{bottom:38px}
 .actor .flip{transform:scaleX(var(--dir,1));transform-origin:50% 100%}
@@ -62,14 +97,18 @@ textarea:focus,input:focus{outline:none;border-color:var(--accent);box-shadow:0 
 @keyframes dust{from{opacity:.75;transform:scale(.6)}to{opacity:0;transform:translate(-26px,-10px) scale(1.5)}}
 
 /* ---- after submitting ---- */
-.finale{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:center;gap:4px;margin:18px 0 0;padding:16px;background:var(--card);border-radius:20px;box-shadow:0 6px 22px rgba(40,25,10,.08)}
-.finale[hidden]{display:none}
-.finale img{width:auto}
-.finale p{flex-basis:100%;margin:10px 0 0;text-align:center;font-weight:bold;color:var(--heading)}
+.finale{text-align:center;margin-top:16px}
+.finale .cast{display:flex;align-items:flex-end;justify-content:center;gap:4px;margin-bottom:12px}
+.finale .cast img{width:auto}
+.finale p{font:700 20px/1.35 var(--serif);color:var(--heading);margin:0 0 16px}
+
+/* ---- footer ---- */
+.foot{text-align:center;margin-top:32px;font-size:13px}
+.foot a{color:var(--ink);opacity:.55;text-decoration:none}
+.foot a:hover{opacity:.9;text-decoration:underline}
 
 /* ---- guide ---- */
 .guide{--gk:.5;position:fixed;left:12px;bottom:12px;z-index:30;display:flex;align-items:flex-end;gap:8px;max-width:calc(100% - 24px);transition:transform .35s ease}
-.guide[hidden]{display:none}
 .guide-figure{flex:0 0 auto;background:none;border:0;padding:0;cursor:pointer;border-radius:12px}
 .guide-figure:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
 .guide-figure img{display:block;width:auto;filter:drop-shadow(0 6px 8px rgba(0,0,0,.18));transform-origin:50% 100%;animation:breathe 3.2s ease-in-out infinite}
@@ -78,12 +117,12 @@ textarea:focus,input:focus{outline:none;border-color:var(--accent);box-shadow:0 
 @keyframes hop{30%{transform:translateY(-14px) scale(.97,1.05)}60%{transform:translateY(0) scale(1.04,.95)}100%{transform:none}}
 .guide-figure img.jump{animation:jump .7s ease}
 @keyframes jump{25%{transform:translateY(-26px) rotate(-8deg)}50%{transform:translateY(-26px) rotate(8deg)}80%{transform:translateY(0) scale(1.06,.92)}100%{transform:none}}
-.bubble{position:relative;margin-bottom:80px;max-width:230px;background:#fff;color:var(--ink);border-radius:16px;padding:11px 14px;font:15px/1.35 Arial,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.14)}
+.bubble{position:relative;margin-bottom:80px;max-width:230px;background:#fff;color:var(--ink);border-radius:16px;padding:12px 14px;font-size:15px;line-height:1.35;box-shadow:0 8px 24px rgba(0,0,0,.14)}
 .bubble.say{animation:say .3s ease}
 @keyframes say{from{transform:scale(.92)}to{transform:none}}
 .bubble::after{content:"";position:absolute;left:-7px;bottom:16px;border:8px solid transparent;border-right-color:#fff;border-left:0}
 .choose{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
-.choose button{flex:1 1 40%;padding:8px 10px;border:1.5px solid var(--field);background:#fff;color:var(--heading);border-radius:10px;font:600 13px Arial,sans-serif;cursor:pointer}
+.choose button{flex:1 1 40%;padding:8px 10px;border:1.5px solid var(--field);background:#fff;color:var(--heading);border-radius:10px;font-weight:600;font-size:13px;cursor:pointer}
 .guide.enter{animation:enter .55s cubic-bezier(.26,1.4,.4,1) both}
 @keyframes enter{from{opacity:0;transform:translateY(40px) scale(.8)}to{opacity:1;transform:none}}
 
@@ -91,6 +130,7 @@ textarea:focus,input:focus{outline:none;border-color:var(--accent);box-shadow:0 
 @media (max-width:699px){
   main{padding-bottom:130px}
   .hero-art{height:140px}
+  .card{padding:20px}
   .guide{--gk:.27;left:0;right:0;bottom:0;max-width:none;align-items:center;gap:10px;padding:8px 14px calc(10px + env(safe-area-inset-bottom));background:var(--card);border-radius:20px 20px 0 0;box-shadow:0 -8px 24px rgba(0,0,0,.14)}
   .guide-figure{margin-top:-44px}
   .bubble{flex:1;margin:0;max-width:none;background:var(--soft);box-shadow:none;padding:10px 12px}
@@ -98,7 +138,7 @@ textarea:focus,input:focus{outline:none;border-color:var(--accent);box-shadow:0 
   .guide.typing{transform:translateY(120%)}
 }
 /* Wide screens: the guide stands beside the questions */
-@media (min-width:1000px){.guide{--gk:.55;left:calc(50% - 320px - 260px);bottom:40px}.bubble{max-width:200px;margin-bottom:110px}}
+@media (min-width:1000px){.guide{--gk:.55;left:calc(50% - 310px - 260px);bottom:40px}.bubble{max-width:200px;margin-bottom:110px}}
 
 @media (prefers-reduced-motion:reduce){
   html{scroll-behavior:auto}
@@ -106,7 +146,7 @@ textarea:focus,input:focus{outline:none;border-color:var(--accent);box-shadow:0 
   .guide-figure img,.actor *,.guide,.bubble,.hero-art{animation:none!important}
   .q{transition:none}
 }
-.preview-flag{position:fixed;top:0;left:0;right:0;z-index:40;background:#222;color:#fff;font:700 11px Arial,sans-serif;letter-spacing:.12em;text-align:center;padding:4px}
+.preview-flag{position:fixed;inset:0 0 auto;z-index:40;background:#1f2329;color:#fff;font:700 11px/1 var(--sans);letter-spacing:.12em;text-align:center;padding:6px}
 </style>
 </head>
 <body>
@@ -114,47 +154,48 @@ textarea:focus,input:focus{outline:none;border-color:var(--accent);box-shadow:0 
 <div id="decor" aria-hidden="true"></div>
 
 <main>
-  <header class="hero">
+  <header class="card hero">
     <div id="heroArt" aria-hidden="true"></div>
     <div class="eyebrow" id="eyebrow"></div>
     <h1 id="title"></h1>
-    <p id="subtitle"></p>
+    <p class="subtitle" id="subtitle"></p>
     <div class="countdown" id="countdown"></div>
   </header>
 
-  <form id="form">
-    <p class="note">Share as much or as little as you like. Your name is optional.</p>
+  <section class="card q" id="signin" data-step="hello" aria-labelledby="signinTitle">
+    <h2 id="signinTitle">Sign in</h2>
+    <p class="lead" id="signInText"></p>
+    <form id="signinForm" novalidate>
+      <label class="field-label" for="who">Your name</label>
+      <div class="row">
+        <input id="who" maxlength="120" autocomplete="name" placeholder="First and last name" required>
+        <button type="submit" class="btn">Continue</button>
+      </div>
+      <p class="error" id="whoError" role="alert"></p>
+    </form>
+  </section>
 
-    <section class="q" data-step="q0">
-      <label for="coworker"><span class="num">1</span><span>A coworker I’m thankful for and why…</span></label>
-      <textarea id="coworker" maxlength="3000"></textarea>
-    </section>
-    <div class="lane" aria-hidden="true"></div>
-    <section class="q" data-step="q1">
-      <label for="moment"><span class="num">2</span><span>A moment at work that made me smile…</span></label>
-      <textarea id="moment" maxlength="3000"></textarea>
-    </section>
-    <div class="lane" aria-hidden="true"></div>
-    <section class="q" data-step="q2">
-      <label for="team"><span class="num">3</span><span>One thing my team does that deserves thanks…</span></label>
-      <textarea id="team" maxlength="3000"></textarea>
-    </section>
-    <div class="lane" aria-hidden="true"></div>
-    <section class="q" data-step="q3">
-      <label for="season"><span class="num">4</span><span>Something I’m looking forward to this season…</span></label>
-      <textarea id="season" maxlength="3000"></textarea>
-    </section>
-    <section class="q" data-step="name">
-      <label for="name"><span class="num">5</span><span>Your name (optional)</span></label>
-      <input id="name" maxlength="200" autocomplete="name">
-    </section>
+  <div class="signed" id="signed" hidden>
+    <span class="chip"><span class="dot" aria-hidden="true"></span>Signed in as <strong id="whoName"></strong></span>
+    <button type="button" class="link-btn" id="notYou">Not you?</button>
+  </div>
+
+  <form id="form" hidden>
+    <p class="note" id="intro"></p>
+    <div id="questions"></div>
     <section class="q" data-step="ready">
-      <button type="submit" class="submit-btn">Share my thanks</button>
-      <p id="message" role="status" aria-live="polite"></p>
+      <button type="submit" class="btn wide" id="submitBtn"></button>
+      <p class="message" id="message" role="status" aria-live="polite"></p>
     </section>
   </form>
 
-  <div class="finale" id="finale" hidden aria-hidden="true"></div>
+  <section class="card finale" id="finale" hidden aria-live="polite">
+    <div class="cast" id="finaleCast" aria-hidden="true"></div>
+    <p id="thanksText"></p>
+    <button type="button" class="btn quiet" id="again">Share more thanks</button>
+  </section>
+
+  <footer class="foot"><a href="settings.html" id="organizer">Organizer settings</a></footer>
 </main>
 
 <aside class="guide" id="guide" hidden>
@@ -162,7 +203,7 @@ textarea:focus,input:focus{outline:none;border-color:var(--accent);box-shadow:0 
   <div class="bubble" id="bubble" aria-live="polite"></div>
 </aside>
 
-<script src="themes.js?v=4"></script>
+<script src="themes.js?v=5"></script>
 <script>
 const SUPABASE = 'https://ylxpuiihsgtdqiwhjcrc.supabase.co/rest/v1/';
 const KEY = 'sb_publishable_E3egLURODxTqRo5tzHXN5Q_-XM49Zwy';
@@ -199,10 +240,16 @@ const title = S.title || theme.headline;
 $('#title').textContent = title;
 $('#eyebrow').textContent = S.eyebrow;
 $('#subtitle').textContent = S.subtitle;
-document.title = `${title} · ${S.eyebrow}`;
+$('#signInText').textContent = S.signIn;
+$('#intro').textContent = S.intro;
+$('#submitBtn').textContent = S.button;
+document.title = S.eyebrow ? `${title} · ${S.eyebrow}` : title;
 if (theme.hero) $('#heroArt').innerHTML = `<img class="hero-art" src="${theme.hero}" alt="">`;
 else { $('#heroArt').className = 'hero-decor'; $('#heroArt').textContent = theme.decor.slice(0, 3).join(' '); }
-if (S.preview) document.body.insertAdjacentHTML('afterbegin', '<div class="preview-flag">PREVIEW — RESPONSES ARE NOT SENT</div>');
+if (S.preview) {
+  document.body.insertAdjacentHTML('afterbegin', '<div class="preview-flag">PREVIEW — RESPONSES ARE NOT SENT</div>');
+  $('#organizer').hidden = true;
+}
 
 function sprinkle(count, oneShot) {
   const box = $('#decor');
@@ -228,13 +275,30 @@ if (S.background !== 'plain' && theme.decor.length) {
 }
 
 // =====================================================================
+// Questions: built from the settings, with a chase lane in up to three gaps
+// =====================================================================
+const questions = S.questions;
+const box = $('#questions');
+const lanesWanted = Math.min(3, questions.length - 1);
+const laneAfter = new Set(Array.from({ length: lanesWanted }, (_, k) => Math.round((k + 1) * questions.length / (lanesWanted + 1)) - 1));
+questions.forEach((text, i) => {
+  const sec = document.createElement('section');
+  sec.className = 'q';
+  sec.dataset.step = 'q' + i;
+  sec.innerHTML = `<label for="a${i}"><span class="num">${i + 1}</span><span></span></label><textarea id="a${i}" maxlength="3000"></textarea>`;
+  sec.querySelector('label span:last-child').textContent = text;
+  box.appendChild(sec);
+  if (laneAfter.has(i)) box.insertAdjacentHTML('beforeend', '<div class="lane" aria-hidden="true"></div>');
+});
+
+// =====================================================================
 // Guide: rides along, changes drawing and line for each question
 // =====================================================================
 const guideEl = $('#guide'), guideImg = $('#guideImg'), bubble = $('#bubble');
 const LINES = {
-  hello: 'Hi! I’ll keep you company. Swipe down whenever you’re ready.',
-  q: ['Someone deserves a little appreciation!', 'Those little moments make a big difference.', 'A great team makes all the difference.', 'What are you looking forward to?'],
-  name: 'Sign your name, or stay a mystery!',
+  hello: 'Hi! Start by signing in with your name.',
+  q: ['Someone deserves a little appreciation!', 'Those little moments make a big difference.', 'A great team makes all the difference.',
+      'What are you looking forward to?', 'Take your time.', 'Great answers so far!', 'Almost there!', 'Last one, you’ve got this.'],
   ready: 'All set? Tap the button when you’re ready.',
   done: 'Thank you for sharing!',
   tap: ['Hey, that tickles!', 'Still on duty!', 'Order in the court!', 'Keep going, you’re doing great.'],
@@ -254,7 +318,7 @@ function show(name) {
   if (!guide) return;
   step = name;
   const g = MASCOTS[guide].guide;
-  if (name.startsWith('q')) { draw(g.q[+name.slice(1)]); say(LINES.q[+name.slice(1)]); }
+  if (name.startsWith('q')) { const i = +name.slice(1); draw(g.q[i % g.q.length]); say(LINES.q[i % LINES.q.length]); }
   else { draw(g[name]); say(LINES[name]); }
   if (!reduceMotion) replay(guideImg, 'hop');
 }
@@ -271,7 +335,7 @@ function aside(src, text, cls) {
 if (guide) {
   loadFrames(Object.values(MASCOTS[guide].guide).flat()).then(() => {
     guideEl.hidden = false;
-    show('hello');
+    show(step);
     if (S.mascot === 'choose') {
       say('Who should keep you company?');
       const row = document.createElement('div');
@@ -280,7 +344,7 @@ if (guide) {
         const b = document.createElement('button');
         b.type = 'button';
         b.textContent = MASCOTS[k].label;
-        b.addEventListener('click', () => loadFrames(Object.values(MASCOTS[k].guide).flat()).then(() => { guide = k; show('hello'); }));
+        b.addEventListener('click', () => loadFrames(Object.values(MASCOTS[k].guide).flat()).then(() => { guide = k; show(step); }));
         row.appendChild(b);
       }
       bubble.appendChild(row);
@@ -302,11 +366,11 @@ if (guide) {
 
   $('#guideFigure').addEventListener('click', () => aside(pick(MASCOTS[guide].guide.tap), pick(LINES.tap), 'jump'));
 
-  // follow along: react to whichever question is in the middle of the screen
+  // follow along: react to whichever card is in the middle of the screen
   const sections = document.querySelectorAll('.q');
   const sectionWatch = new IntersectionObserver(entries => {
     for (const e of entries) {
-      if (!e.isIntersecting) continue;
+      if (!e.isIntersecting || e.target.closest('[hidden]')) continue;
       sections.forEach(s => s.classList.toggle('current', s === e.target));
       if (step !== 'done' && e.target.dataset.step !== step) show(e.target.dataset.step);
     }
@@ -319,6 +383,47 @@ if (guide) {
     if (!document.activeElement || !document.activeElement.matches('textarea,input')) guideEl.classList.remove('typing');
   }, 150));
 }
+
+// =====================================================================
+// Sign in: a name is required before the questions appear.
+// It is remembered on this phone so people don't type it twice.
+// =====================================================================
+const NAME_KEY = 'beyondTheBadgeName';
+let visitor = '';
+function remember(name) { if (S.preview) return; try { name ? localStorage.setItem(NAME_KEY, name) : localStorage.removeItem(NAME_KEY); } catch (e) {} }
+function signIn(name, quietly) {
+  visitor = name;
+  $('#whoName').textContent = name;
+  $('#signin').hidden = true;
+  $('#signed').hidden = false;
+  $('#form').hidden = false;
+  if (!quietly && guide) aside(MASCOTS[guide].guide.hello, `Nice to meet you, ${name.split(/\s+/)[0]}!`);
+}
+$('#signinForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const name = $('#who').value.trim().replace(/\s+/g, ' ');
+  const ok = name.length >= 2;
+  $('#who').setAttribute('aria-invalid', String(!ok));
+  $('#whoError').textContent = ok ? '' : 'Please enter your name to continue.';
+  if (!ok) { $('#who').focus(); return; }
+  remember(name);
+  signIn(name);
+  $('#a0').focus({ preventScroll: true });
+  $('#signed').scrollIntoView({ block: 'start' });
+});
+$('#notYou').addEventListener('click', () => {
+  remember('');
+  visitor = '';
+  $('#who').value = '';
+  $('#signed').hidden = true;
+  $('#form').hidden = true;
+  $('#finale').hidden = true;
+  $('#signin').hidden = false;
+  $('#who').focus();
+});
+let savedName = '';
+try { savedName = S.preview ? '' : localStorage.getItem(NAME_KEY) || ''; } catch (e) {}
+if (savedName) signIn(savedName, true);
 
 // =====================================================================
 // Chase scenes between questions
@@ -505,12 +610,11 @@ if (!(S.chase && runner)) {
 function startCountdown(when) {
   const target = new Date(when).getTime();
   if (isNaN(target)) return;
-  const box = $('#countdown');
+  const el = $('#countdown');
   const tick = () => {
     const d = target - Date.now();
-    box.style.display = 'block';
-    if (d <= 0) { box.textContent = 'The event is here!'; return; }
-    box.textContent = `${Math.floor(d / 864e5)} days · ${Math.floor(d % 864e5 / 36e5)} hours · ${Math.floor(d % 36e5 / 6e4)} minutes to go`;
+    el.textContent = d <= 0 ? 'The event is here!'
+      : `${Math.floor(d / 864e5)} days · ${Math.floor(d % 864e5 / 36e5)} hours · ${Math.floor(d % 36e5 / 6e4)} minutes to go`;
   };
   tick();
   setInterval(tick, 60000);
@@ -526,43 +630,66 @@ else fetch(SUPABASE + 'event_settings?id=eq.1&select=event_at', { headers: { api
 // =====================================================================
 const form = $('#form'), message = $('#message');
 
+// One row per response. The first four answers go into the original columns.
+// When the questions were edited, each column also gets its question, and
+// answers past the fourth are added to the last column, so nothing is lost.
+// If the table has an "answers" column (see supabase/answers-column.sql),
+// every question and answer is saved there too.
+function buildRow() {
+  const answers = questions.map((q, i) => ({ question: q, answer: $('#a' + i).value.trim() }));
+  const edited = !sameQuestions(questions, QUESTIONS);
+  const row = { name: visitor };
+  const text = a => edited ? (a.answer ? `${a.question}\n${a.answer}` : '') : a.answer;
+  ANSWER_COLUMNS.forEach((col, i) => {
+    const part = i < ANSWER_COLUMNS.length - 1 ? answers.slice(i, i + 1) : answers.slice(i);
+    row[col] = part.map(text).filter(Boolean).join('\n\n');
+  });
+  return { row, answers };
+}
+async function send(row, answers) {
+  const post = body => fetch(SUPABASE + 'thanksgiving_responses', {
+    method: 'POST',
+    headers: { apikey: KEY, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+    body: JSON.stringify(body),
+  });
+  let r = await post(Object.assign({ answers }, row));
+  if (r.status === 400 && /answers/.test(await r.text())) r = await post(row);   // no "answers" column yet
+  if (!r.ok) throw new Error(r.status);
+}
+
 function finale() {
-  const box = $('#finale');
-  box.replaceChildren();
-  const add = src => { const img = new Image(); img.src = src; img.alt = ''; img.style.height = (frameHeight[src] || 230) * .45 + 'px'; box.appendChild(img); };
+  const cast$ = $('#finaleCast');
+  cast$.replaceChildren();
+  const add = src => { const img = new Image(); img.src = src; img.alt = ''; img.style.height = (frameHeight[src] || 230) * .42 + 'px'; cast$.appendChild(img); };
   for (const k of cast()) add(MASCOTS[k].frames.breath[0]);
   if (runner) add(runner.frames.look[3]);
-  const cap = document.createElement('p');
-  cap.textContent = runner ? 'Phew, almost had it! Thank you for sharing.' : 'Thank you for sharing!';
-  box.appendChild(cap);
-  box.hidden = false;
+  $('#thanksText').textContent = S.thanks;
+  form.hidden = true;
+  $('#finale').hidden = false;
+  $('#finale').scrollIntoView({ block: 'center' });
   if (!reduceMotion && theme.decor.length) sprinkle(24, true);
   if (guide) { show('done'); if (!reduceMotion) replay(guideImg, 'jump'); }
 }
+$('#again').addEventListener('click', () => {
+  $('#finale').hidden = true;
+  form.hidden = false;
+  step = 'ready';
+  if (guide) show('ready');
+  $('#a0').focus();
+});
 
 form.addEventListener('submit', async e => {
   e.preventDefault();
-  const data = {
-    coworker_thanks: $('#coworker').value.trim(),
-    smiling_moment: $('#moment').value.trim(),
-    team_thanks: $('#team').value.trim(),
-    looking_forward: $('#season').value.trim(),
-    name: $('#name').value.trim(),
-  };
-  if (!Object.values(data).some((v, i) => i < 4 && v)) { message.textContent = 'Please answer at least one question before submitting.'; return; }
-  if (S.preview) { message.textContent = 'Preview only — nothing was sent.'; finale(); return; }
-  const button = form.querySelector('.submit-btn');
+  const { row, answers } = buildRow();
+  if (!answers.some(a => a.answer)) { message.textContent = 'Please answer at least one question before submitting.'; return; }
+  if (S.preview) { message.textContent = ''; form.reset(); finale(); return; }
+  const button = $('#submitBtn');
   button.disabled = true;
   message.textContent = 'Sending…';
   try {
-    const r = await fetch(SUPABASE + 'thanksgiving_responses', {
-      method: 'POST',
-      headers: { apikey: KEY, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
-      body: JSON.stringify(data),
-    });
-    if (!r.ok) throw new Error(r.status);
+    await send(row, answers);
+    message.textContent = '';
     form.reset();
-    message.textContent = 'Thank you for sharing! Your response has been received.';
     finale();
   } catch (err) {
     message.textContent = 'Sorry, your response could not be sent. Please try again.';

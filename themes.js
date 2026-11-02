@@ -1,6 +1,6 @@
 // Shared by index.html (the sign-up page) and settings.html.
 // Edit a theme, a guide or a runaway here and both pages pick it up.
-// After editing, raise the number in "themes.js?v=4" in both pages, so phones
+// After editing, raise the number in "themes.js?v=5" in both pages, so phones
 // that already opened the page download the new version instead of a cached one.
 // Frames live in assets/cut/, made from assets/source/ by tools/make-cutouts.py.
 
@@ -104,10 +104,26 @@ const MASCOTS = {
 // When no guide is set, an officer leads the chase; the partner is always an officer.
 const OFFICERS = ['female-officer', 'male-officer'];
 
+// The questions on the page. The first four answers also go into the
+// original database columns, in this order.
+const QUESTIONS = [
+  'A coworker I’m thankful for and why…',
+  'A moment at work that made me smile…',
+  'One thing my team does that deserves thanks…',
+  'Something I’m looking forward to this season…',
+];
+const ANSWER_COLUMNS = ['coworker_thanks', 'smiling_moment', 'team_thanks', 'looking_forward'];
+const MAX_QUESTIONS = 8;
+
 const DEFAULTS = {
   theme: 'auto',       // 'auto' = holiday of the current month
   eyebrow: 'BEYOND THE BADGE',
   subtitle: 'A moment of thanks for the people and moments that make a difference.',
+  signIn: 'Sign in with your name so we know who this is from.',
+  intro: 'Share as much or as little as you like.',
+  questions: QUESTIONS,
+  button: 'Share my thanks',
+  thanks: 'Thank you for sharing! Your response has been received.',
   mascot: 'auto',      // auto | a key in MASCOTS | choose | none
   background: 'fall',  // fall (moving) | still | plain
   chase: true,
@@ -115,17 +131,23 @@ const DEFAULTS = {
   qrShape: 'badge',    // square | badge | circle (QR card only, not part of the link)
 };
 
-// Settings travel in the page link, so the QR code carries the look.
-// Short keys keep the QR code small.
-const PARAM_KEYS = { theme: 't', title: 'h', eyebrow: 'e', subtitle: 's', mascot: 'm', background: 'b', chase: 'c', date: 'd', bgColor: 'bg', accent: 'ac' };
+// Settings travel in the page link, so the QR code carries the look and the
+// questions. Short keys keep the QR code small; questions repeat as q=...&q=...
+const PARAM_KEYS = { theme: 't', title: 'h', eyebrow: 'e', subtitle: 's', signIn: 'si', intro: 'i', button: 'bt', thanks: 'ty',
+                     mascot: 'm', background: 'b', chase: 'c', date: 'd', bgColor: 'bg', accent: 'ac' };
+const ON_OFF = ['chase'];
 const OLD_MASCOT_NAMES = { female: 'female-officer', male: 'male-officer' };   // links printed before the judges existed
+
+const sameQuestions = (a, b) => a.length === b.length && a.every((q, i) => q === b[i]);
 
 function readSettings(search) {
   const p = new URLSearchParams(search);
   const s = Object.assign({}, DEFAULTS);
   for (const [key, short] of Object.entries(PARAM_KEYS)) if (p.has(short)) s[key] = p.get(short);
+  for (const key of ON_OFF) s[key] = String(s[key]) !== '0' && String(s[key]) !== 'false';
+  const qs = p.getAll('q').map(q => q.trim()).filter(Boolean).slice(0, MAX_QUESTIONS);
+  if (qs.length) s.questions = qs;
   s.mascot = OLD_MASCOT_NAMES[s.mascot] || s.mascot;
-  s.chase = String(s.chase) !== '0' && String(s.chase) !== 'false';
   s.preview = p.get('preview') === '1';
   return s;
 }
@@ -134,10 +156,12 @@ function settingsToQuery(s) {
   const p = new URLSearchParams();
   for (const [key, short] of Object.entries(PARAM_KEYS)) {
     const v = s[key];
-    if (key === 'chase') { if (!v) p.set(short, '0'); continue; }
+    if (ON_OFF.includes(key)) { if (v === false) p.set(short, '0'); continue; }
     if (v == null || v === '' || v === DEFAULTS[key]) continue;
     p.set(short, v);
   }
+  const qs = (s.questions || []).map(q => q.trim()).filter(Boolean);
+  if (qs.length && !sameQuestions(qs, QUESTIONS)) qs.forEach(q => p.append('q', q));
   return p.toString();
 }
 

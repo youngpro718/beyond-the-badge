@@ -2,13 +2,15 @@ BEYOND THE BADGE — EVENT SIGN-UP PAGE
 
 FILES
   index.html     The page people land on after scanning the QR code.
-  settings.html  Where you set up the look: theme, title, background, colors,
-                 guide (mascot), chase animation and event date. It shows a
-                 live phone preview and makes the link and a themed QR card
-                 to download or print.
+  settings.html  Where you set everything up, in collapsible sections:
+                 theme; title and date; sign-in message and questions (edit,
+                 add, remove, reorder, up to 8); button and thank-you message;
+                 background and colors; guide and chase; link and QR card.
+                 Live phone preview beside it. Reach it from the small
+                 "Organizer settings" link at the bottom of the sign-up page.
   themes.js      The holiday themes and the mascots, shared by both pages.
                  Edit a theme's colors, title, decorations or runaway here.
-                 After editing it, raise the number in "themes.js?v=4" in
+                 After editing it, raise the number in "themes.js?v=5" in
                  index.html and settings.html so phones don't keep the old copy.
   assets/
     source/      The supplied art, unchanged:
@@ -45,10 +47,11 @@ ANIMATION
   Thanksgiving and Winter show their dressed-up officer at the top.
 
 HOW THE SETTINGS REACH THE PAGE
-  Everything chosen in settings.html is written into the page link
-  (index.html?t=halloween&h=...). The QR code is just that link, so whoever
-  scans it gets that exact look. Nothing about the look is stored in the
-  database. Change the settings, and print a new QR code.
+  Everything chosen in settings.html, questions included, is written into
+  the page link (index.html?t=halloween&h=...&q=...). The QR code is just
+  that link, so whoever scans it gets that exact page. Nothing about the
+  page is stored in the database. Change the settings, and print a new QR
+  code. Settings are also saved in this browser, so they're there next time.
   With no settings in the link, the page uses the holiday theme for the
   current month and picks a guide for each visitor.
 
@@ -68,11 +71,18 @@ MASCOTS
   tools/make-cutouts.py, run the script, then add the character to
   MASCOTS or RUNAWAYS in themes.js.
 
-SUBMISSIONS
-  Responses still go to the same Supabase table (thanksgiving_responses)
-  with the same columns, so the four questions are unchanged. The countdown
-  uses the date from settings, or the event date saved in Supabase if the
-  link has none. The settings preview never sends responses.
+SIGN-IN AND SUBMISSIONS
+  Visitors sign in with their name before the questions appear. The name is
+  required, remembered on their phone, and saved with every response ("Not
+  you?" switches person).
+  Responses go to the Supabase table thanksgiving_responses. The first four
+  answers go into the original columns (coworker_thanks, smiling_moment,
+  team_thanks, looking_forward). If the questions were edited, each column
+  also gets its question, and answers 5 to 8 are added to looking_forward.
+  Run supabase/answers-column.sql once to also save every question and
+  answer, exactly as asked, in an "answers" column.
+  The countdown uses the date from settings, or the event date saved in
+  Supabase if the link has none. The settings preview never sends responses.
 
 ONLINE (GitHub Pages)
   Page:      https://youngpro718.github.io/beyond-the-badge/index.html
