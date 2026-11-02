@@ -1,0 +1,575 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Beyond the Badge</title>
+<style>
+/* Colors are set from the theme in themes.js; these are only the starting values. */
+:root{--bg1:#f8e6c9;--bg2:#e9b98a;--card:#fffaf2;--ink:#3a2a1c;--heading:#6b3415;--accent:#c4622d;--soft:#fbecd8;--field:#e2c9a8;--button:#7a3a17}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;min-height:100vh;color:var(--ink);font:17px/1.45 Georgia,serif;background:var(--bg1);overflow-x:hidden}
+
+/* ---- background ---- */
+.sky{position:fixed;inset:0;z-index:-2;background:linear-gradient(165deg,var(--bg1) 0%,var(--bg2) 100%)}
+#decor{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden}
+.flake{position:absolute;top:-70px;left:var(--x);font-size:var(--size);opacity:.85;animation:fall var(--dur) linear var(--delay) infinite;will-change:transform}
+@keyframes fall{to{transform:translate3d(var(--drift),118vh,0) rotate(var(--spin))}}
+#decor.still .flake{animation:none;top:var(--top);opacity:.28}
+
+/* ---- page ---- */
+main{max-width:640px;margin:0 auto;padding:22px 16px 200px}
+.hero{position:relative;overflow:hidden;text-align:center;padding:30px 22px 26px;background:var(--card);border-radius:24px;box-shadow:0 10px 34px rgba(40,25,10,.12)}
+.hero::before{content:"";position:absolute;left:0;right:0;top:0;height:7px;background:var(--accent)}
+.hero-art{display:block;height:170px;width:auto;margin:0 auto 6px;transform-origin:50% 100%;animation:rise .8s cubic-bezier(.2,1.2,.4,1) both,sway 4s ease-in-out .8s infinite}
+@keyframes rise{from{opacity:0;transform:translateY(30px) scale(.9)}to{opacity:1;transform:none}}
+@keyframes sway{50%{transform:rotate(1.5deg) translateY(-2px)}}
+.hero-decor{font-size:30px;letter-spacing:10px;line-height:1;margin-bottom:12px}
+.hero-decor:empty{display:none}
+.eyebrow{font:700 12px Arial,sans-serif;letter-spacing:.22em;color:var(--accent);text-transform:uppercase}
+h1{font-size:clamp(38px,10.5vw,60px);line-height:1.04;margin:10px 0;color:var(--heading)}
+#subtitle{margin:0 auto;max-width:30em;opacity:.85}
+.countdown{display:none;margin:16px auto 0;padding:9px 16px;width:max-content;max-width:100%;border-radius:30px;background:var(--soft);color:var(--heading);font:700 14px Arial,sans-serif}
+.note{text-align:center;margin:22px 10px 6px;font:15px Arial,sans-serif;opacity:.8}
+
+.q{background:var(--card);border-radius:20px;padding:20px 20px 22px;margin:12px 0;box-shadow:0 6px 22px rgba(40,25,10,.08);transition:transform .35s,box-shadow .35s}
+.q.current{transform:scale(1.015);box-shadow:0 12px 30px rgba(40,25,10,.14)}
+.q label{display:flex;gap:12px;align-items:flex-start;font-weight:bold;font-size:19px;line-height:1.35;margin-bottom:12px;color:var(--heading)}
+.num{flex:0 0 30px;height:30px;border-radius:50%;background:var(--accent);color:#fff;font:700 14px/30px Arial,sans-serif;text-align:center}
+textarea,input{width:100%;font:16px Arial,sans-serif;color:var(--ink);border:1.5px solid var(--field);border-radius:12px;padding:13px;background:#fff;transition:border-color .2s,box-shadow .2s}
+textarea{min-height:110px;resize:vertical}
+textarea:focus,input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 4px var(--soft)}
+.submit-btn{width:100%;padding:17px;background:var(--button);color:#fff;font:700 17px Arial,sans-serif;border:0;border-radius:14px;cursor:pointer}
+.submit-btn:disabled{opacity:.6}
+#message{margin:14px 4px 0;font:15px/1.5 Arial,sans-serif;text-align:center}
+#message:empty{display:none}
+
+/* ---- chase scenes between questions ---- */
+.lane{position:relative;height:128px;overflow:hidden;margin:0 -16px}
+.lane.divider{display:flex;align-items:center;justify-content:center;gap:18px;height:56px;font-size:22px;opacity:.55}
+.lane.rule{height:28px}
+.actor{position:absolute;left:0;bottom:6px;will-change:transform}
+.actor.fly{bottom:38px}
+.actor .flip{transform:scaleX(var(--dir,1));transform-origin:50% 100%}
+.actor .body{display:block;transform-origin:50% 100%}
+.actor img{display:block;width:auto}
+.actor.fly .body{animation:float 1.1s ease-in-out infinite alternate}
+.actor .body.bounce{animation:bounce .38s ease-out}
+@keyframes float{from{transform:translateY(0)}to{transform:translateY(-12px)}}
+@keyframes bounce{40%{transform:translateY(-22px)}100%{transform:none}}
+.actor .dust{position:absolute;left:-10px;bottom:0;font-size:18px;opacity:0;animation:dust .55s ease-out forwards}
+@keyframes dust{from{opacity:.75;transform:scale(.6)}to{opacity:0;transform:translate(-26px,-10px) scale(1.5)}}
+
+/* ---- after submitting ---- */
+.finale{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:center;gap:4px;margin:18px 0 0;padding:16px;background:var(--card);border-radius:20px;box-shadow:0 6px 22px rgba(40,25,10,.08)}
+.finale[hidden]{display:none}
+.finale img{width:auto}
+.finale p{flex-basis:100%;margin:10px 0 0;text-align:center;font-weight:bold;color:var(--heading)}
+
+/* ---- guide ---- */
+.guide{--gk:.5;position:fixed;left:12px;bottom:12px;z-index:30;display:flex;align-items:flex-end;gap:8px;max-width:calc(100% - 24px);transition:transform .35s ease}
+.guide[hidden]{display:none}
+.guide-figure{flex:0 0 auto;background:none;border:0;padding:0;cursor:pointer;border-radius:12px}
+.guide-figure:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.guide-figure img{display:block;width:auto;filter:drop-shadow(0 6px 8px rgba(0,0,0,.18));transform-origin:50% 100%;animation:breathe 3.2s ease-in-out infinite}
+@keyframes breathe{50%{transform:scaleY(1.015) translateY(-1px)}}
+.guide-figure img.hop{animation:hop .5s ease}
+@keyframes hop{30%{transform:translateY(-14px) scale(.97,1.05)}60%{transform:translateY(0) scale(1.04,.95)}100%{transform:none}}
+.guide-figure img.jump{animation:jump .7s ease}
+@keyframes jump{25%{transform:translateY(-26px) rotate(-8deg)}50%{transform:translateY(-26px) rotate(8deg)}80%{transform:translateY(0) scale(1.06,.92)}100%{transform:none}}
+.bubble{position:relative;margin-bottom:80px;max-width:230px;background:#fff;color:var(--ink);border-radius:16px;padding:11px 14px;font:15px/1.35 Arial,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.14)}
+.bubble.say{animation:say .3s ease}
+@keyframes say{from{transform:scale(.92)}to{transform:none}}
+.bubble::after{content:"";position:absolute;left:-7px;bottom:16px;border:8px solid transparent;border-right-color:#fff;border-left:0}
+.choose{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.choose button{flex:1 1 40%;padding:8px 10px;border:1.5px solid var(--field);background:#fff;color:var(--heading);border-radius:10px;font:600 13px Arial,sans-serif;cursor:pointer}
+.guide.enter{animation:enter .55s cubic-bezier(.26,1.4,.4,1) both}
+@keyframes enter{from{opacity:0;transform:translateY(40px) scale(.8)}to{opacity:1;transform:none}}
+
+/* Phones: the guide is a slim bar docked at the bottom, the character peeking over it */
+@media (max-width:699px){
+  main{padding-bottom:130px}
+  .hero-art{height:140px}
+  .guide{--gk:.27;left:0;right:0;bottom:0;max-width:none;align-items:center;gap:10px;padding:8px 14px calc(10px + env(safe-area-inset-bottom));background:var(--card);border-radius:20px 20px 0 0;box-shadow:0 -8px 24px rgba(0,0,0,.14)}
+  .guide-figure{margin-top:-44px}
+  .bubble{flex:1;margin:0;max-width:none;background:var(--soft);box-shadow:none;padding:10px 12px}
+  .bubble::after{border-right-color:var(--soft)}
+  .guide.typing{transform:translateY(120%)}
+}
+/* Wide screens: the guide stands beside the questions */
+@media (min-width:1000px){.guide{--gk:.55;left:calc(50% - 320px - 260px);bottom:40px}.bubble{max-width:200px;margin-bottom:110px}}
+
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .flake{animation:none!important;top:var(--top)!important;opacity:.28}
+  .guide-figure img,.actor *,.guide,.bubble,.hero-art{animation:none!important}
+  .q{transition:none}
+}
+.preview-flag{position:fixed;top:0;left:0;right:0;z-index:40;background:#222;color:#fff;font:700 11px Arial,sans-serif;letter-spacing:.12em;text-align:center;padding:4px}
+</style>
+</head>
+<body>
+<div class="sky" aria-hidden="true"></div>
+<div id="decor" aria-hidden="true"></div>
+
+<main>
+  <header class="hero">
+    <div id="heroArt" aria-hidden="true"></div>
+    <div class="eyebrow" id="eyebrow"></div>
+    <h1 id="title"></h1>
+    <p id="subtitle"></p>
+    <div class="countdown" id="countdown"></div>
+  </header>
+
+  <form id="form">
+    <p class="note">Share as much or as little as you like. Your name is optional.</p>
+
+    <section class="q" data-step="q0">
+      <label for="coworker"><span class="num">1</span><span>A coworker I’m thankful for and why…</span></label>
+      <textarea id="coworker" maxlength="3000"></textarea>
+    </section>
+    <div class="lane" aria-hidden="true"></div>
+    <section class="q" data-step="q1">
+      <label for="moment"><span class="num">2</span><span>A moment at work that made me smile…</span></label>
+      <textarea id="moment" maxlength="3000"></textarea>
+    </section>
+    <div class="lane" aria-hidden="true"></div>
+    <section class="q" data-step="q2">
+      <label for="team"><span class="num">3</span><span>One thing my team does that deserves thanks…</span></label>
+      <textarea id="team" maxlength="3000"></textarea>
+    </section>
+    <div class="lane" aria-hidden="true"></div>
+    <section class="q" data-step="q3">
+      <label for="season"><span class="num">4</span><span>Something I’m looking forward to this season…</span></label>
+      <textarea id="season" maxlength="3000"></textarea>
+    </section>
+    <section class="q" data-step="name">
+      <label for="name"><span class="num">5</span><span>Your name (optional)</span></label>
+      <input id="name" maxlength="200" autocomplete="name">
+    </section>
+    <section class="q" data-step="ready">
+      <button type="submit" class="submit-btn">Share my thanks</button>
+      <p id="message" role="status" aria-live="polite"></p>
+    </section>
+  </form>
+
+  <div class="finale" id="finale" hidden aria-hidden="true"></div>
+</main>
+
+<aside class="guide" id="guide" hidden>
+  <button type="button" class="guide-figure" id="guideFigure" aria-label="Say hi to your event guide"><img id="guideImg" alt=""></button>
+  <div class="bubble" id="bubble" aria-live="polite"></div>
+</aside>
+
+<script src="themes.js?v=4"></script>
+<script>
+const SUPABASE = 'https://ylxpuiihsgtdqiwhjcrc.supabase.co/rest/v1/';
+const KEY = 'sb_publishable_E3egLURODxTqRo5tzHXN5Q_-XM49Zwy';
+const S = readSettings(location.search);
+const theme = resolveTheme(S.theme);
+const runner = theme.runner;
+const $ = sel => document.querySelector(sel);
+const wait = ms => new Promise(r => setTimeout(r, ms));
+const pick = list => list[Math.floor(Math.random() * list.length)];
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const mascotKeys = Object.keys(MASCOTS);
+
+// Every drawing's height, so characters keep the same size from frame to frame.
+const frameHeight = {};
+function loadFrames(list) {
+  return Promise.all([...new Set(list)].map(src => new Promise(res => {
+    if (frameHeight[src]) return res();
+    const img = new Image();
+    img.onload = () => { frameHeight[src] = img.naturalHeight; res(); };
+    img.onerror = res;
+    img.src = src;
+  })));
+}
+
+// =====================================================================
+// Look: colors, words, header art, background
+// =====================================================================
+const css = document.documentElement.style;
+for (const k of ['bg1', 'bg2', 'card', 'ink', 'heading', 'accent', 'soft', 'field', 'button']) css.setProperty('--' + k, theme[k]);
+if (S.bgColor) { css.setProperty('--bg1', S.bgColor); css.setProperty('--bg2', S.bgColor); }
+if (S.accent) css.setProperty('--accent', S.accent);
+
+const title = S.title || theme.headline;
+$('#title').textContent = title;
+$('#eyebrow').textContent = S.eyebrow;
+$('#subtitle').textContent = S.subtitle;
+document.title = `${title} · ${S.eyebrow}`;
+if (theme.hero) $('#heroArt').innerHTML = `<img class="hero-art" src="${theme.hero}" alt="">`;
+else { $('#heroArt').className = 'hero-decor'; $('#heroArt').textContent = theme.decor.slice(0, 3).join(' '); }
+if (S.preview) document.body.insertAdjacentHTML('afterbegin', '<div class="preview-flag">PREVIEW — RESPONSES ARE NOT SENT</div>');
+
+function sprinkle(count, oneShot) {
+  const box = $('#decor');
+  for (let i = 0; i < count; i++) {
+    const el = document.createElement('span');
+    el.className = 'flake';
+    el.textContent = theme.decor[i % theme.decor.length];
+    const v = {
+      '--x': Math.random() * 100 + 'vw', '--top': Math.random() * 95 + 'vh',
+      '--size': 18 + Math.random() * 22 + 'px',
+      '--dur': (oneShot ? 2.5 + Math.random() * 2 : 10 + Math.random() * 10) + 's',
+      '--delay': (oneShot ? Math.random() * .6 : -Math.random() * 20) + 's',
+      '--drift': (Math.random() - .5) * 180 + 'px', '--spin': (Math.random() - .5) * 720 + 'deg',
+    };
+    for (const [k, val] of Object.entries(v)) el.style.setProperty(k, val);
+    if (oneShot) { el.style.animationIterationCount = 1; setTimeout(() => el.remove(), 5500); }
+    box.appendChild(el);
+  }
+}
+if (S.background !== 'plain' && theme.decor.length) {
+  if (S.background === 'still') $('#decor').classList.add('still');
+  sprinkle(18, false);
+}
+
+// =====================================================================
+// Guide: rides along, changes drawing and line for each question
+// =====================================================================
+const guideEl = $('#guide'), guideImg = $('#guideImg'), bubble = $('#bubble');
+const LINES = {
+  hello: 'Hi! I’ll keep you company. Swipe down whenever you’re ready.',
+  q: ['Someone deserves a little appreciation!', 'Those little moments make a big difference.', 'A great team makes all the difference.', 'What are you looking forward to?'],
+  name: 'Sign your name, or stay a mystery!',
+  ready: 'All set? Tap the button when you’re ready.',
+  done: 'Thank you for sharing!',
+  tap: ['Hey, that tickles!', 'Still on duty!', 'Order in the court!', 'Keep going, you’re doing great.'],
+  chase: runner ? [`There goes the ${runner.name}!`, `Catch that ${runner.name}!`, `Not the ${runner.name} again…`] : [],
+};
+let guide = S.mascot === 'none' ? null : MASCOTS[S.mascot] ? S.mascot : pick(mascotKeys);
+let step = 'hello';
+let asideTimer;
+
+function replay(el, cls) { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); }
+function draw(src) {
+  guideImg.src = src;
+  guideImg.style.height = `calc(${frameHeight[src] || 270}px * var(--gk))`;
+}
+function say(text) { bubble.textContent = text; if (!reduceMotion) replay(bubble, 'say'); }
+function show(name) {
+  if (!guide) return;
+  step = name;
+  const g = MASCOTS[guide].guide;
+  if (name.startsWith('q')) { draw(g.q[+name.slice(1)]); say(LINES.q[+name.slice(1)]); }
+  else { draw(g[name]); say(LINES[name]); }
+  if (!reduceMotion) replay(guideImg, 'hop');
+}
+// a quick reaction that goes back to the current step afterward
+function aside(src, text, cls) {
+  if (!guide || step === 'done') return;
+  draw(src);
+  say(text);
+  if (!reduceMotion) replay(guideImg, cls || 'hop');
+  clearTimeout(asideTimer);
+  asideTimer = setTimeout(() => show(step), 2400);
+}
+
+if (guide) {
+  loadFrames(Object.values(MASCOTS[guide].guide).flat()).then(() => {
+    guideEl.hidden = false;
+    show('hello');
+    if (S.mascot === 'choose') {
+      say('Who should keep you company?');
+      const row = document.createElement('div');
+      row.className = 'choose';
+      for (const k of mascotKeys) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.textContent = MASCOTS[k].label;
+        b.addEventListener('click', () => loadFrames(Object.values(MASCOTS[k].guide).flat()).then(() => { guide = k; show('hello'); }));
+        row.appendChild(b);
+      }
+      bubble.appendChild(row);
+    }
+  });
+  guideImg.addEventListener('animationend', e => { if (e.animationName !== 'breathe') guideImg.classList.remove('hop', 'jump'); });
+  if (!reduceMotion) {
+    guideEl.classList.add('enter');
+    guideEl.addEventListener('animationend', e => { if (e.animationName === 'enter') guideEl.classList.remove('enter'); });
+    // blink now and then, when the standing drawing is showing
+    (function blink() {
+      setTimeout(() => {
+        const b = MASCOTS[guide] && MASCOTS[guide].guide.blink;
+        if (b && guideImg.getAttribute('src') === b[0]) { draw(b[1]); setTimeout(() => { if (guideImg.getAttribute('src') === b[1]) draw(b[0]); }, 140); }
+        blink();
+      }, 2500 + Math.random() * 3000);
+    })();
+  }
+
+  $('#guideFigure').addEventListener('click', () => aside(pick(MASCOTS[guide].guide.tap), pick(LINES.tap), 'jump'));
+
+  // follow along: react to whichever question is in the middle of the screen
+  const sections = document.querySelectorAll('.q');
+  const sectionWatch = new IntersectionObserver(entries => {
+    for (const e of entries) {
+      if (!e.isIntersecting) continue;
+      sections.forEach(s => s.classList.toggle('current', s === e.target));
+      if (step !== 'done' && e.target.dataset.step !== step) show(e.target.dataset.step);
+    }
+  }, { rootMargin: '-42% 0px -42% 0px' });
+  sections.forEach(s => sectionWatch.observe(s));
+
+  // step out of the way while someone types on a phone
+  document.addEventListener('focusin', e => { if (e.target.matches('textarea,input')) guideEl.classList.add('typing'); });
+  document.addEventListener('focusout', () => setTimeout(() => {
+    if (!document.activeElement || !document.activeElement.matches('textarea,input')) guideEl.classList.remove('typing');
+  }, 150));
+}
+
+// =====================================================================
+// Chase scenes between questions
+// Each character plays its drawn frames: running loops, the rest play once.
+// =====================================================================
+const SCALE = 0.35;   // drawing pixels -> screen pixels (a standing officer is about 95px)
+
+function makeActor(lane, look) {
+  const el = document.createElement('div'), flip = document.createElement('div'), body = document.createElement('div');
+  el.className = 'actor' + (look.fly ? ' fly' : '');
+  flip.className = 'flip'; body.className = 'body';
+  flip.appendChild(body); el.appendChild(flip); lane.appendChild(el);
+  const img = new Image();
+  img.alt = ''; body.appendChild(img);
+  let timer = null, x = 0;
+
+  const set = src => { img.src = src; img.style.height = (frameHeight[src] || 270) * SCALE + 'px'; };
+  const stop = () => clearInterval(timer);
+  const a = {
+    // loop a set of frames (running, breathing)
+    loop(name, fps) {
+      stop();
+      const list = look.frames[name];
+      let i = 0;
+      set(list[0]);
+      timer = setInterval(() => set(list[++i % list.length]), 1000 / fps);
+      return a;
+    },
+    // show one frame and hold it (index from 0)
+    hold(name, i) { stop(); set(look.frames[name][i]); return a; },
+    // play frames once, each for `ms`, then hold the last
+    async play(name, ms, from = 0, to) {
+      stop();
+      const list = look.frames[name].slice(from, to);
+      for (const src of list) { set(src); await wait(ms); }
+      return a;
+    },
+    place(px) { x = px; el.style.transform = `translateX(${x}px)`; return a; },
+    face(dir) { flip.style.setProperty('--dir', dir); return a; },
+    move(to, ms, easing = 'linear') {
+      const from = x; x = to;
+      const anim = el.animate([{ transform: `translateX(${from}px)` }, { transform: `translateX(${to}px)` }], { duration: ms, easing, fill: 'forwards' });
+      return anim.finished.then(() => { el.style.transform = `translateX(${to}px)`; anim.cancel(); });
+    },
+    get x() { return x; },
+    puff() {
+      if (reduceMotion) return a;
+      const d = document.createElement('span'); d.className = 'dust'; d.textContent = '💨';
+      el.appendChild(d); setTimeout(() => d.remove(), 650);
+      return a;
+    },
+    // jump in surprise, then flinch
+    async startle() { a.hold('startled', 1); replay(body, 'bounce'); await wait(380); a.hold('startled', 2); return a; },
+    // the full dive: crouch, leap, fly, belly-flop, crawl, stand. dx = distance, sign = direction
+    async dive(dx) {
+      await a.play('dive', 110, 1, 3);                       // crouch, push off
+      a.hold('dive', 3); await a.move(x + dx * .35, 170);     // leap
+      a.hold('dive', 4); await a.move(x + dx * .45, 210);     // fly
+      a.hold('dive', 5).puff(); await a.move(x + dx * .2, 260, 'cubic-bezier(.2,.9,.3,1)');   // belly-flop and slide
+      await wait(320);
+      await a.play('dive', 260, 6, 8);                       // crawl up, stand
+      return a;
+    },
+    remove() { stop(); el.remove(); },
+  };
+  return a;
+}
+const person = (lane, key) => makeActor(lane, { frames: MASCOTS[key].frames });
+const runaway = lane => {
+  const r = makeActor(lane, { frames: runner.frames, fly: runner.fly });
+  r.run = () => r.loop('run', 12);
+  r.lookBack = () => r.play('look', 170);
+  return r;
+};
+
+// 1. The dash: it bolts across, an officer chases, dives, misses, catches a breath.
+async function sceneDash(lane, a) {
+  const w = lane.clientWidth;
+  const item = runaway(lane).place(-110).run();
+  const cop = person(lane, a).place(-170).loop('run', 14);
+  const gone = item.move(w + 60, 2100);
+  await wait(400);
+  await cop.move(w * .28, 900);
+  await cop.dive(120);
+  cop.loop('breath', 2.4);
+  await wait(1200);
+  cop.loop('run', 14);
+  await Promise.all([cop.move(w + 100, 1000), gone]);
+}
+
+// 2. Doubles back: someone is on watch, it sneaks past, looks back, runs back,
+//    and the watcher dives at it as it goes by, misses, and gives chase.
+async function sceneDoubleBack(lane, watcherKey) {
+  const w = lane.clientWidth, spot = w * .14;
+  const watcher = person(lane, watcherKey).place(spot).hold('idle', 0);
+  const item = runaway(lane).place(-110).run();
+  await item.move(spot + 30, 750);
+  watcher.startle();
+  await item.move(w - 100, 900);
+  await item.lookBack();
+  item.face(-1).run();
+  const back = item.move(-130, 1500);
+  await wait(420);
+  await watcher.dive(110);
+  watcher.face(-1).loop('run', 14);
+  await Promise.all([watcher.move(-200, 1150), back]);
+}
+
+// 3. Team chase: both chase, stop for a breath, it peeks back, the chase is back on.
+async function sceneTeam(lane, a, b) {
+  const w = lane.clientWidth;
+  const item = runaway(lane).place(-110).run();
+  const gone = item.move(w + 70, 1900);
+  const c1 = person(lane, a).place(-170).loop('run', 14);
+  const c2 = person(lane, b).place(-300).loop('run', 13);
+  await wait(350);
+  await Promise.all([c1.move(w * .58, 1300), c2.move(w * .28, 1400)]);
+  c1.loop('breath', 2.4); c2.loop('breath', 2.1);
+  await gone;
+  await wait(450);
+  item.face(-1).place(w + 70).run();
+  await item.move(w - 110, 450, 'ease-out');
+  await item.lookBack();
+  c1.startle(); c2.startle();
+  await wait(500);
+  item.face(1).run();
+  const away = item.move(w + 90, 380);
+  await wait(220);
+  c1.loop('run', 14).puff(); c2.loop('run', 13);
+  await Promise.all([c1.move(w + 110, 850), c2.move(w + 140, 1050), away]);
+}
+
+const lanes = [...document.querySelectorAll('.lane')];
+// The guide leads the chase and an officer partners. Worked out when a scene
+// plays, so a guide picked under "let them choose" leads from then on.
+const noGuideLead = pick(OFFICERS), partners = {};
+function cast() {
+  const lead = guide || noGuideLead;
+  partners[lead] = partners[lead] || pick(OFFICERS.filter(k => k !== lead));
+  return [lead, partners[lead]];
+}
+const castFrames = () => cast().flatMap(k => Object.values(MASCOTS[k].frames).flat()).concat(Object.values(runner.frames).flat());
+const scenes = [
+  l => { const [lead] = cast(); return sceneDash(l, lead); },
+  l => { const [, partner] = cast(); return sceneDoubleBack(l, partner); },
+  l => sceneTeam(l, ...cast()),
+];
+
+if (!(S.chase && runner)) {
+  // no chase for this theme: a quiet row of its decorations instead
+  lanes.forEach(l => {
+    if (theme.decor.length) { l.className = 'lane divider'; l.textContent = theme.decor.slice(0, 3).join('   '); }
+    else l.className = 'lane rule';
+  });
+} else {
+  if (reduceMotion) {
+    // a still picture in place of each scene
+    loadFrames(castFrames()).then(() => lanes.forEach((l, i) => {
+      person(l, cast()[i === 1 ? 1 : 0]).place(l.clientWidth * .2).hold('idle', 0);
+      runaway(l).place(l.clientWidth * .62).hold('run', 0);
+    }));
+  } else {
+    const playing = new Set();
+    const play = async (lane, i) => {
+      if (playing.has(lane)) return;
+      playing.add(lane);
+      await loadFrames(castFrames());   // already loaded unless the guide just changed
+      if (guide) aside(MASCOTS[guide].guide.call, pick(LINES.chase));
+      try { await scenes[i](lane); } finally {
+        lane.replaceChildren();
+        setTimeout(() => playing.delete(lane), 1500);   // can replay when scrolled back to
+      }
+    };
+    const laneWatch = new IntersectionObserver(entries => {
+      for (const e of entries) if (e.isIntersecting) play(e.target, lanes.indexOf(e.target));
+    }, { threshold: .9, rootMargin: '0px 0px -130px 0px' });   // above the guide bar, not behind it
+    lanes.forEach(l => laneWatch.observe(l));
+  }
+}
+
+// =====================================================================
+// Countdown: date from the link, else the event date saved in Supabase
+// =====================================================================
+function startCountdown(when) {
+  const target = new Date(when).getTime();
+  if (isNaN(target)) return;
+  const box = $('#countdown');
+  const tick = () => {
+    const d = target - Date.now();
+    box.style.display = 'block';
+    if (d <= 0) { box.textContent = 'The event is here!'; return; }
+    box.textContent = `${Math.floor(d / 864e5)} days · ${Math.floor(d % 864e5 / 36e5)} hours · ${Math.floor(d % 36e5 / 6e4)} minutes to go`;
+  };
+  tick();
+  setInterval(tick, 60000);
+}
+if (S.date) startCountdown(S.date);
+else fetch(SUPABASE + 'event_settings?id=eq.1&select=event_at', { headers: { apikey: KEY } })
+  .then(r => r.ok ? r.json() : [])
+  .then(([v] = []) => { if (v && v.event_at) startCountdown(v.event_at); })
+  .catch(() => {});
+
+// =====================================================================
+// Submit
+// =====================================================================
+const form = $('#form'), message = $('#message');
+
+function finale() {
+  const box = $('#finale');
+  box.replaceChildren();
+  const add = src => { const img = new Image(); img.src = src; img.alt = ''; img.style.height = (frameHeight[src] || 230) * .45 + 'px'; box.appendChild(img); };
+  for (const k of cast()) add(MASCOTS[k].frames.breath[0]);
+  if (runner) add(runner.frames.look[3]);
+  const cap = document.createElement('p');
+  cap.textContent = runner ? 'Phew, almost had it! Thank you for sharing.' : 'Thank you for sharing!';
+  box.appendChild(cap);
+  box.hidden = false;
+  if (!reduceMotion && theme.decor.length) sprinkle(24, true);
+  if (guide) { show('done'); if (!reduceMotion) replay(guideImg, 'jump'); }
+}
+
+form.addEventListener('submit', async e => {
+  e.preventDefault();
+  const data = {
+    coworker_thanks: $('#coworker').value.trim(),
+    smiling_moment: $('#moment').value.trim(),
+    team_thanks: $('#team').value.trim(),
+    looking_forward: $('#season').value.trim(),
+    name: $('#name').value.trim(),
+  };
+  if (!Object.values(data).some((v, i) => i < 4 && v)) { message.textContent = 'Please answer at least one question before submitting.'; return; }
+  if (S.preview) { message.textContent = 'Preview only — nothing was sent.'; finale(); return; }
+  const button = form.querySelector('.submit-btn');
+  button.disabled = true;
+  message.textContent = 'Sending…';
+  try {
+    const r = await fetch(SUPABASE + 'thanksgiving_responses', {
+      method: 'POST',
+      headers: { apikey: KEY, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+      body: JSON.stringify(data),
+    });
+    if (!r.ok) throw new Error(r.status);
+    form.reset();
+    message.textContent = 'Thank you for sharing! Your response has been received.';
+    finale();
+  } catch (err) {
+    message.textContent = 'Sorry, your response could not be sent. Please try again.';
+  } finally {
+    button.disabled = false;
+  }
+});
+</script>
+</body>
+</html>

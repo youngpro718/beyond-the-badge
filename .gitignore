@@ -1,0 +1,4 @@
+# Original artwork stays on this computer; the site only needs assets/cut/.
+assets/source/
+.DS_Store
+__pycache__/
