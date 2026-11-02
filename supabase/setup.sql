@@ -53,3 +53,14 @@ grant select on public.thanksgiving_responses to authenticated;
 --   accounts: Authentication > Sign In / Providers > turn off
 --   "Allow new users to sign up". (Accounts that are not organizers can't
 --   see anything anyway; this just keeps the user list clean.)
+
+-- 5. Header pictures organizers upload in settings (added later; already run)
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('page-images', 'page-images', true, 2097152, array['image/png','image/jpeg','image/webp'])
+on conflict (id) do nothing;
+drop policy if exists "organizers upload page images" on storage.objects;
+create policy "organizers upload page images" on storage.objects
+  for insert to authenticated with check (bucket_id = 'page-images' and public.is_organizer());
+drop policy if exists "organizers replace page images" on storage.objects;
+create policy "organizers replace page images" on storage.objects
+  for update to authenticated using (bucket_id = 'page-images' and public.is_organizer());

@@ -8,19 +8,24 @@ FILES
                  add, remove, reorder, up to 8); button and thank-you message;
                  background and colors; guide and chase; link and QR card.
                  Live phone preview beside it.
-                 Responses: read, search and download every response as CSV.
+                 Responses: read, search, delete and download responses as
+                 CSV; switch responses open or closed, one per person or not,
+                 and "Start a new round" for the next event.
                  Reach it from the small "Organizer settings" link at the
                  bottom of the sign-up page.
   config.js      Supabase address and publishable key, and the online page
                  address. Shared by both pages.
   supabase/setup.sql  One-time database setup (see ORGANIZER LOGIN). Done.
   supabase/hardening.sql  Extra tightening: size limits on the email and
-                 answers columns, and removes table access nobody needs.
-                 Run each statement on its own in the SQL Editor.
+                 answers columns, and removes table access nobody needs. Done.
+  supabase/response-rules.sql  Lets organizers delete responses, and makes
+                 the database enforce one response per person, the
+                 open/closed switch and the 30-a-minute spam limit. Run each
+                 numbered block on its own in the SQL Editor.
   assets/share.png  The picture shown when the link is shared by text or chat.
   themes.js      The holiday themes and the mascots, shared by both pages.
                  Edit a theme's colors, title, decorations or runaway here.
-                 After editing it, raise the number in "themes.js?v=7" in
+                 After editing it, raise the number in "themes.js?v=9" in
                  index.html and settings.html so phones don't keep the old copy.
   assets/
     source/      The supplied art, unchanged:

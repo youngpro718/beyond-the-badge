@@ -44,6 +44,8 @@ main{max-width:620px;margin:0 auto;padding:24px 16px 200px}
 .hero-art{display:block;height:170px;width:auto;margin:0 auto 8px;transform-origin:50% 100%;animation:rise .8s cubic-bezier(.2,1.2,.4,1) both,sway 4s ease-in-out .8s infinite}
 @keyframes rise{from{opacity:0;transform:translateY(30px) scale(.9)}to{opacity:1;transform:none}}
 @keyframes sway{50%{transform:rotate(1.5deg) translateY(-2px)}}
+.hero-art{max-width:100%;object-fit:contain}
+.hero-art.logo{height:auto;max-height:150px;animation:rise .8s cubic-bezier(.2,1.2,.4,1) both}
 .hero-decor{font-size:30px;letter-spacing:10px;line-height:1;margin-bottom:12px}
 .hero-decor:empty{display:none}
 .eyebrow{font:700 12px/1 var(--sans);letter-spacing:.2em;color:var(--accent);text-transform:uppercase}
@@ -106,6 +108,8 @@ input[aria-invalid="true"]{border-color:#b3261e}
 
 /* ---- after submitting ---- */
 .finale{text-align:center;margin-top:16px}
+.notice{text-align:center;margin-top:16px}
+.notice .lead{margin:0}
 .finale .cast{display:flex;align-items:flex-end;justify-content:center;gap:4px;margin-bottom:12px}
 .finale .cast img{width:auto}
 .finale p{font:700 20px/1.35 var(--serif);color:var(--heading);margin:0 0 16px}
@@ -185,6 +189,11 @@ input[aria-invalid="true"]{border-color:#b3261e}
     </form>
   </section>
 
+  <section class="card notice" id="notice" hidden aria-live="polite">
+    <h2 id="noticeTitle"></h2>
+    <p class="lead" id="noticeText"></p>
+  </section>
+
   <div class="signed" id="signed" hidden>
     <span class="chip"><span class="dot" aria-hidden="true"></span>Signed in as <strong id="whoName"></strong></span>
     <button type="button" class="link-btn" id="notYou">Not you?</button>
@@ -214,8 +223,8 @@ input[aria-invalid="true"]{border-color:#b3261e}
   <div class="bubble" id="bubble" aria-live="polite"></div>
 </aside>
 
-<script src="config.js?v=7"></script>
-<script src="themes.js?v=7"></script>
+<script src="config.js?v=8"></script>
+<script src="themes.js?v=9"></script>
 <script>
 const SUPABASE = SUPABASE_URL + '/rest/v1/', KEY = SUPABASE_KEY;
 const S = readSettings(location.search);
@@ -257,8 +266,17 @@ $('#signInText').textContent = S.signIn;
 $('#intro').textContent = S.intro;
 $('#submitBtn').textContent = S.button;
 document.title = S.eyebrow ? `${title} · ${S.eyebrow}` : title;
-if (theme.hero) $('#heroArt').innerHTML = `<img class="hero-art" src="${theme.hero}" alt="">`;
-else { $('#heroArt').className = 'hero-decor'; $('#heroArt').textContent = theme.decor.slice(0, 3).join(' '); }
+// the picture above the title (settings: theme's, a guide, an uploaded logo, or none)
+const heroPic = heroSrc(S, theme);
+function heroDecor() { $('#heroArt').className = 'hero-decor'; $('#heroArt').textContent = S.heroImage === 'none' ? '' : theme.decor.slice(0, 3).join(' '); }
+if (heroPic) {
+  const img = new Image();
+  img.className = 'hero-art' + (S.heroImage.startsWith('u:') ? ' logo' : '');
+  img.alt = '';
+  img.onerror = () => { img.remove(); heroDecor(); };   // a deleted upload: fall back quietly
+  img.src = heroPic;
+  $('#heroArt').appendChild(img);
+} else heroDecor();
 if (S.preview) {
   document.body.insertAdjacentHTML('afterbegin', '<div class="preview-flag">PREVIEW — RESPONSES ARE NOT SENT</div>');
   $('#organizer').hidden = true;
@@ -433,6 +451,9 @@ $('#notYou').addEventListener('click', () => {
   $('#who').value = $('#whoEmail').value = '';
   form.reset();
   clearDraft();
+  try { localStorage.removeItem(SENT_KEY); } catch (e) {}
+  if (!rules.open) return notice('Responses are closed', 'Thank you to everyone who shared!');
+  $('#notice').hidden = true;
   $('#signed').hidden = true;
   $('#form').hidden = true;
   $('#finale').hidden = true;
@@ -678,13 +699,41 @@ async function send(row, answers) {
   for (let tries = 0; tries < 3; tries++) {
     const r = await post(body);
     if (r.ok) return;
-    const missing = r.status === 400 && ((await r.text()).match(/'(email|answers)' column/) || [])[1];
+    const text = r.status === 400 ? await r.text() : '';
+    const refused = (text.match(/responses_closed|already_responded|too_many/) || [])[0];
+    if (refused) throw new Error(refused);
+    const missing = (text.match(/'(email|answers)' column/) || [])[1];
     if (!missing) throw new Error(r.status);
     if (missing === 'email') body.name = `${body.name} (${body.email})`;
     delete body[missing];
   }
   throw new Error('not saved');
 }
+
+// =====================================================================
+// Response rules, set by organizers and checked again by the database:
+// open/closed, and one response per person
+// =====================================================================
+let rules = { open: true, oneEach: true };
+const SENT_KEY = 'beyondTheBadgeSent';
+function notice(title, text) {
+  $('#noticeTitle').textContent = title;
+  $('#noticeText').textContent = text;
+  $('#notice').hidden = false;
+  $('#signin').hidden = $('#form').hidden = $('#finale').hidden = true;
+}
+function alreadySent() {
+  notice('You’ve already shared your thanks', 'Thank you! There’s one response per person. If this isn’t you, tap “Not you?”.');
+}
+function sentOnThisPhone() { try { return !S.preview && !!localStorage.getItem(SENT_KEY); } catch (e) { return false; } }
+if (!S.preview) fetch(SUPABASE + 'rpc/response_rules', { method: 'POST', headers: { apikey: KEY, 'Content-Type': 'application/json' }, body: '{}' })
+  .then(r => r.ok ? r.json() : null)
+  .then(r => {
+    if (r) rules = Object.assign(rules, r);
+    if (!rules.open) notice('Responses are closed', 'Thank you to everyone who shared!');
+    else if (rules.oneEach && visitor && sentOnThisPhone()) alreadySent();
+  })
+  .catch(() => {});
 
 function finale() {
   const cast$ = $('#finaleCast');
@@ -693,6 +742,7 @@ function finale() {
   for (const k of cast()) add(MASCOTS[k].frames.breath[0]);
   if (runner) add(runner.frames.look[3]);
   $('#thanksText').textContent = S.thanks;
+  $('#again').hidden = rules.oneEach && !S.preview;
   form.hidden = true;
   $('#finale').hidden = false;
   $('#finale').scrollIntoView({ block: 'center' });
@@ -736,9 +786,14 @@ form.addEventListener('submit', async e => {
     message.textContent = '';
     form.reset();
     clearDraft();
+    try { localStorage.setItem(SENT_KEY, JSON.stringify({ name: visitor, at: Date.now() })); } catch (e) {}
     finale();
   } catch (err) {
-    message.textContent = 'Sorry, your response could not be sent. Please try again.';
+    if (err.message === 'already_responded') { clearDraft(); alreadySent(); return; }
+    if (err.message === 'responses_closed') { notice('Responses are closed', 'Thank you to everyone who shared!'); return; }
+    message.textContent = err.message === 'too_many'
+      ? 'Lots of people are sharing right now. Please wait a minute and try again.'
+      : 'Sorry, your response could not be sent. Please try again.';
   } finally {
     button.disabled = false;
   }

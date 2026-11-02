@@ -1,6 +1,6 @@
 // Shared by index.html (the sign-up page) and settings.html.
 // Edit a theme, a guide or a runaway here and both pages pick it up.
-// After editing, raise the number in "themes.js?v=7" in both pages, so phones
+// After editing, raise the number in "themes.js?v=9" in both pages, so phones
 // that already opened the page download the new version instead of a cached one.
 // Frames live in assets/cut/, made from assets/source/ by tools/make-cutouts.py.
 
@@ -119,6 +119,7 @@ const DEFAULTS = {
   theme: 'auto',       // 'auto' = holiday of the current month
   eyebrow: 'BEYOND THE BADGE',
   subtitle: 'A moment of thanks for the people and moments that make a difference.',
+  heroImage: 'theme',  // picture above the title: theme | none | a key in MASCOTS | u:<uploaded file>
   signIn: 'Sign in with your name so we know who this is from.',
   intro: 'Share as much or as little as you like.',
   questions: QUESTIONS,
@@ -129,11 +130,16 @@ const DEFAULTS = {
   chase: true,
   cta: 'Scan to share your thanks',
   qrShape: 'badge',    // square | badge | circle (QR card only, not part of the link)
+  // Response rules: saved with the settings and checked by the database
+  // (supabase/response-rules.sql), not part of the link
+  open: true,          // accepting responses
+  oneEach: true,       // one response per person (same name or email)
+  roundStart: '',      // only responses since then count for "one each"
 };
 
 // Settings travel in the page link, so the QR code carries the look and the
 // questions. Short keys keep the QR code small; questions repeat as q=...&q=...
-const PARAM_KEYS = { theme: 't', title: 'h', eyebrow: 'e', subtitle: 's', signIn: 'si', intro: 'i', button: 'bt', thanks: 'ty',
+const PARAM_KEYS = { theme: 't', title: 'h', eyebrow: 'e', subtitle: 's', heroImage: 'hi', signIn: 'si', intro: 'i', button: 'bt', thanks: 'ty',
                      mascot: 'm', background: 'b', chase: 'c', date: 'd', bgColor: 'bg', accent: 'ac' };
 const ON_OFF = ['chase'];
 const OLD_MASCOT_NAMES = { female: 'female-officer', male: 'male-officer' };   // links printed before the judges existed
@@ -163,6 +169,16 @@ function settingsToQuery(s) {
   const qs = (s.questions || []).map(q => q.trim()).filter(Boolean);
   if (qs.length && !sameQuestions(qs, QUESTIONS)) qs.forEach(q => p.append('q', q));
   return p.toString();
+}
+
+// The picture above the title, or '' for none. Falls back to the theme's
+// holiday officer (some themes have none) for "theme" or anything unknown.
+function heroSrc(s, theme) {
+  const v = s.heroImage || 'theme';
+  if (v === 'none') return '';
+  if (MASCOTS[v]) return MASCOTS[v].guide.hello;
+  if (v.startsWith('u:') && /^[\w.-]+$/.test(v.slice(2)) && typeof IMAGE_FOLDER !== 'undefined') return IMAGE_FOLDER + v.slice(2);
+  return theme.hero || '';
 }
 
 function resolveTheme(choice, date) {

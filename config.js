@@ -5,3 +5,5 @@ const SUPABASE_URL = 'https://ylxpuiihsgtdqiwhjcrc.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_E3egLURODxTqRo5tzHXN5Q_-XM49Zwy';
 // Where the sign-up page lives online. QR codes point here.
 const PUBLIC_PAGE = 'https://youngpro718.github.io/beyond-the-badge/index.html';
+// Header pictures uploaded in settings live in this public storage folder.
+const IMAGE_FOLDER = SUPABASE_URL + '/storage/v1/object/public/page-images/';
