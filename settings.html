@@ -149,12 +149,19 @@ input:focus,textarea:focus{outline:2px solid #2f5d8a;outline-offset:1px}
 <script>
 const $ = s => document.querySelector(s);
 const STORE = 'eventPageSettings';
-const defaultBase = location.href.replace(/settings\.html.*$/, 'index.html');
+// Where the page lives online (GitHub Pages). QR codes point here even when this
+// settings page is opened from a copy on this computer.
+const PUBLIC_PAGE = 'https://youngpro718.github.io/beyond-the-badge/index.html';
+const isLocal = url => /^(file:|https?:\/\/(localhost|127\.|0\.0\.0\.0|\[::1\]))/.test(url);
+const here = location.href.replace(/settings\.html.*$/, 'index.html');
+const defaultBase = isLocal(here) ? PUBLIC_PAGE : here;
 
 let s = load();
 function load() {
-  try { return Object.assign({}, DEFAULTS, { base: defaultBase }, JSON.parse(localStorage.getItem(STORE) || '{}')); }
-  catch (e) { return Object.assign({}, DEFAULTS, { base: defaultBase }); }
+  let saved = {};
+  try { saved = JSON.parse(localStorage.getItem(STORE) || '{}'); } catch (e) {}
+  if (!saved.base || isLocal(saved.base)) delete saved.base;   // an address that only works on this computer
+  return Object.assign({}, DEFAULTS, { base: defaultBase }, saved);
 }
 function save() {
   try { localStorage.setItem(STORE, JSON.stringify(s)); $('#saved').textContent = 'Saved.'; } catch (e) {}
@@ -246,9 +253,9 @@ function refresh() {
   const url = link();
   $('#linkOut').textContent = url;
   $('#open').href = url;
-  let host = '';
-  try { host = new URL(s.base, location.href).hostname; } catch (e) {}
-  $('#localWarn').hidden = !(location.protocol === 'file:' || /^(localhost|127\.|0\.0\.0\.0|\[::1\])/.test(host) || s.base.startsWith('file:'));
+  let full = s.base;
+  try { full = new URL(s.base, location.href).href; } catch (e) {}
+  $('#localWarn').hidden = !isLocal(full);
 
   clearTimeout(previewTimer);
   previewTimer = setTimeout(() => {

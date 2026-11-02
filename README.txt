@@ -74,12 +74,23 @@ SUBMISSIONS
   uses the date from settings, or the event date saved in Supabase if the
   link has none. The settings preview never sends responses.
 
+ONLINE (GitHub Pages)
+  Page:      https://youngpro718.github.io/beyond-the-badge/index.html
+  Settings:  https://youngpro718.github.io/beyond-the-badge/settings.html
+  Code:      https://github.com/youngpro718/beyond-the-badge (public)
+  QR codes always point at the online page, even when settings.html is
+  opened from this computer. To publish a change: commit and push to main;
+  the site updates in a minute or two. assets/source/ (the original art)
+  is not uploaded; it stays on this computer.
+
+QR CARD
+  "QR code shape" in settings: Badge (a police shield with a star), Circle
+  or Square. The code sits in the middle with a clear white border so it
+  still scans; the loose dots around it are decoration.
+
 STILL OPEN
-  Hosting: the page needs a public address before phones can open the QR
-  code. Until then the QR code points at this computer. Put the hosted
-  address in "Page address" in settings.html, then download the QR card.
-  A private view/export of responses and a check of the database
-  permissions are still to do.
+  A private view/export of responses is still to do. The public key cannot
+  read responses (checked: 401).
 
 Open the pages through a web server, not by double-clicking the file
 (for a quick local test: python3 -m http.server 8080 in this folder, then
