@@ -143,7 +143,7 @@ input[aria-invalid="true"]{border-color:#b3261e}
   .guide-figure{margin-top:-44px}
   .bubble{flex:1;margin:0;max-width:none;background:var(--soft);box-shadow:none;padding:10px 12px}
   .bubble::after{border-right-color:var(--soft)}
-  .guide.typing{transform:translateY(120%)}
+  .guide.typing{transform:translateY(calc(100% + 60px))}   /* fully out of sight, character included */
 }
 /* Wide screens: the guide stands beside the questions */
 @media (min-width:1000px){.guide{--gk:.55;left:calc(50% - 310px - 260px);bottom:40px}.bubble{max-width:200px;margin-bottom:110px}}
