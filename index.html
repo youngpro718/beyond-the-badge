@@ -50,9 +50,9 @@ h1{font:700 clamp(36px,10vw,56px)/1.05 var(--serif);margin:12px 0;color:var(--he
 h2{font:700 22px/1.25 var(--serif);color:var(--heading);margin:0 0 4px}
 .lead{margin:0 0 16px;opacity:.8}
 .field-label{display:block;font-weight:600;font-size:14px;margin:0 0 6px}
-.row{display:flex;gap:8px}
-.row input{flex:1;min-width:0}
-@media (max-width:420px){.row{flex-direction:column}.row .btn{width:100%}}
+.field-label + input{margin-bottom:16px}
+.optional{font-weight:400;opacity:.65}
+#signinForm .error{margin:-8px 0 12px}
 .signed{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:16px;font-size:14px}
 .signed .chip{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:999px;background:var(--card);box-shadow:var(--shadow)}
 .signed .dot{width:8px;height:8px;border-radius:50%;background:var(--accent)}
@@ -77,7 +77,7 @@ input[aria-invalid="true"]{border-color:#b3261e}
 .btn.quiet{background:var(--soft);color:var(--heading)}
 .message{margin:12px 4px 0;font-size:15px;text-align:center}
 .message:empty{display:none}
-.error{color:#b3261e;font-size:14px;margin:8px 0 0}
+.error{color:#b3261e;font-size:14px}
 .error:empty{display:none}
 
 /* ---- chase scenes between questions ---- */
@@ -167,11 +167,11 @@ input[aria-invalid="true"]{border-color:#b3261e}
     <p class="lead" id="signInText"></p>
     <form id="signinForm" novalidate>
       <label class="field-label" for="who">Your name</label>
-      <div class="row">
-        <input id="who" maxlength="120" autocomplete="name" placeholder="First and last name" required>
-        <button type="submit" class="btn">Continue</button>
-      </div>
+      <input id="who" maxlength="120" autocomplete="name" placeholder="First and last name" required>
+      <label class="field-label" for="whoEmail">Email <span class="optional">(optional)</span></label>
+      <input id="whoEmail" type="email" maxlength="200" autocomplete="email" inputmode="email" placeholder="name@example.com">
       <p class="error" id="whoError" role="alert"></p>
+      <button type="submit" class="btn wide">Continue</button>
     </form>
   </section>
 
@@ -203,10 +203,10 @@ input[aria-invalid="true"]{border-color:#b3261e}
   <div class="bubble" id="bubble" aria-live="polite"></div>
 </aside>
 
-<script src="themes.js?v=5"></script>
+<script src="config.js?v=6"></script>
+<script src="themes.js?v=6"></script>
 <script>
-const SUPABASE = 'https://ylxpuiihsgtdqiwhjcrc.supabase.co/rest/v1/';
-const KEY = 'sb_publishable_E3egLURODxTqRo5tzHXN5Q_-XM49Zwy';
+const SUPABASE = SUPABASE_URL + '/rest/v1/', KEY = SUPABASE_KEY;
 const S = readSettings(location.search);
 const theme = resolveTheme(S.theme);
 const runner = theme.runner;
@@ -385,14 +385,15 @@ if (guide) {
 }
 
 // =====================================================================
-// Sign in: a name is required before the questions appear.
-// It is remembered on this phone so people don't type it twice.
+// Sign in: a name is required before the questions appear; email is optional.
+// Both are remembered on this phone so people don't type them twice.
 // =====================================================================
-const NAME_KEY = 'beyondTheBadgeName';
-let visitor = '';
-function remember(name) { if (S.preview) return; try { name ? localStorage.setItem(NAME_KEY, name) : localStorage.removeItem(NAME_KEY); } catch (e) {} }
-function signIn(name, quietly) {
+const VISITOR_KEY = 'beyondTheBadgeVisitor';
+let visitor = '', visitorEmail = '';
+function remember(who) { if (S.preview) return; try { who ? localStorage.setItem(VISITOR_KEY, JSON.stringify(who)) : localStorage.removeItem(VISITOR_KEY); } catch (e) {} }
+function signIn(name, email, quietly) {
   visitor = name;
+  visitorEmail = email;
   $('#whoName').textContent = name;
   $('#signin').hidden = true;
   $('#signed').hidden = false;
@@ -402,28 +403,30 @@ function signIn(name, quietly) {
 $('#signinForm').addEventListener('submit', e => {
   e.preventDefault();
   const name = $('#who').value.trim().replace(/\s+/g, ' ');
-  const ok = name.length >= 2;
-  $('#who').setAttribute('aria-invalid', String(!ok));
-  $('#whoError').textContent = ok ? '' : 'Please enter your name to continue.';
-  if (!ok) { $('#who').focus(); return; }
-  remember(name);
-  signIn(name);
+  const email = $('#whoEmail').value.trim();
+  const nameOk = name.length >= 2, emailOk = !email || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  $('#who').setAttribute('aria-invalid', String(!nameOk));
+  $('#whoEmail').setAttribute('aria-invalid', String(!emailOk));
+  $('#whoError').textContent = !nameOk ? 'Please enter your name to continue.' : !emailOk ? 'That email doesn’t look right. Fix it or leave it blank.' : '';
+  if (!nameOk || !emailOk) { (nameOk ? $('#whoEmail') : $('#who')).focus(); return; }
+  remember({ name, email });
+  signIn(name, email);
   $('#a0').focus({ preventScroll: true });
   $('#signed').scrollIntoView({ block: 'start' });
 });
 $('#notYou').addEventListener('click', () => {
   remember('');
-  visitor = '';
-  $('#who').value = '';
+  visitor = visitorEmail = '';
+  $('#who').value = $('#whoEmail').value = '';
   $('#signed').hidden = true;
   $('#form').hidden = true;
   $('#finale').hidden = true;
   $('#signin').hidden = false;
   $('#who').focus();
 });
-let savedName = '';
-try { savedName = S.preview ? '' : localStorage.getItem(NAME_KEY) || ''; } catch (e) {}
-if (savedName) signIn(savedName, true);
+let saved = null;
+try { saved = S.preview ? null : JSON.parse(localStorage.getItem(VISITOR_KEY) || 'null'); } catch (e) {}
+if (saved && saved.name) signIn(saved.name, saved.email || '', true);
 
 // =====================================================================
 // Chase scenes between questions
@@ -633,12 +636,13 @@ const form = $('#form'), message = $('#message');
 // One row per response. The first four answers go into the original columns.
 // When the questions were edited, each column also gets its question, and
 // answers past the fourth are added to the last column, so nothing is lost.
-// If the table has an "answers" column (see supabase/answers-column.sql),
-// every question and answer is saved there too.
+// After supabase/setup.sql has run, the email and every question with its
+// answer are saved in their own columns too.
 function buildRow() {
   const answers = questions.map((q, i) => ({ question: q, answer: $('#a' + i).value.trim() }));
   const edited = !sameQuestions(questions, QUESTIONS);
   const row = { name: visitor };
+  if (visitorEmail) row.email = visitorEmail;
   const text = a => edited ? (a.answer ? `${a.question}\n${a.answer}` : '') : a.answer;
   ANSWER_COLUMNS.forEach((col, i) => {
     const part = i < ANSWER_COLUMNS.length - 1 ? answers.slice(i, i + 1) : answers.slice(i);
@@ -652,9 +656,18 @@ async function send(row, answers) {
     headers: { apikey: KEY, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
     body: JSON.stringify(body),
   });
-  let r = await post(Object.assign({ answers }, row));
-  if (r.status === 400 && /answers/.test(await r.text())) r = await post(row);   // no "answers" column yet
-  if (!r.ok) throw new Error(r.status);
+  // Before setup.sql has run there is no email or answers column: leave the
+  // missing one out and try again (the email then goes next to the name).
+  let body = Object.assign({ answers }, row);
+  for (let tries = 0; tries < 3; tries++) {
+    const r = await post(body);
+    if (r.ok) return;
+    const missing = r.status === 400 && ((await r.text()).match(/'(email|answers)' column/) || [])[1];
+    if (!missing) throw new Error(r.status);
+    if (missing === 'email') body.name = `${body.name} (${body.email})`;
+    delete body[missing];
+  }
+  throw new Error('not saved');
 }
 
 function finale() {

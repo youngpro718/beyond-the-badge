@@ -1,6 +1,6 @@
 // Shared by index.html (the sign-up page) and settings.html.
 // Edit a theme, a guide or a runaway here and both pages pick it up.
-// After editing, raise the number in "themes.js?v=5" in both pages, so phones
+// After editing, raise the number in "themes.js?v=6" in both pages, so phones
 // that already opened the page download the new version instead of a cached one.
 // Frames live in assets/cut/, made from assets/source/ by tools/make-cutouts.py.
 

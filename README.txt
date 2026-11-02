@@ -2,15 +2,21 @@ BEYOND THE BADGE — EVENT SIGN-UP PAGE
 
 FILES
   index.html     The page people land on after scanning the QR code.
-  settings.html  Where you set everything up, in collapsible sections:
+  settings.html  Organizers only (email + password). Two tabs:
+                 Page: everything about the sign-up page, in collapsible sections:
                  theme; title and date; sign-in message and questions (edit,
                  add, remove, reorder, up to 8); button and thank-you message;
                  background and colors; guide and chase; link and QR card.
-                 Live phone preview beside it. Reach it from the small
-                 "Organizer settings" link at the bottom of the sign-up page.
+                 Live phone preview beside it.
+                 Responses: read, search and download every response as CSV.
+                 Reach it from the small "Organizer settings" link at the
+                 bottom of the sign-up page.
+  config.js      Supabase address and publishable key, and the online page
+                 address. Shared by both pages.
+  supabase/setup.sql  One-time database setup (see ORGANIZER LOGIN).
   themes.js      The holiday themes and the mascots, shared by both pages.
                  Edit a theme's colors, title, decorations or runaway here.
-                 After editing it, raise the number in "themes.js?v=5" in
+                 After editing it, raise the number in "themes.js?v=6" in
                  index.html and settings.html so phones don't keep the old copy.
   assets/
     source/      The supplied art, unchanged:
@@ -49,9 +55,10 @@ ANIMATION
 HOW THE SETTINGS REACH THE PAGE
   Everything chosen in settings.html, questions included, is written into
   the page link (index.html?t=halloween&h=...&q=...). The QR code is just
-  that link, so whoever scans it gets that exact page. Nothing about the
-  page is stored in the database. Change the settings, and print a new QR
-  code. Settings are also saved in this browser, so they're there next time.
+  that link, so whoever scans it gets that exact page. Change the settings,
+  and print a new QR code. The settings page also saves your choices in the
+  database (page_settings), so every organizer sees the same settings on any
+  device.
   With no settings in the link, the page uses the holiday theme for the
   current month and picks a guide for each visitor.
 
@@ -72,15 +79,18 @@ MASCOTS
   MASCOTS or RUNAWAYS in themes.js.
 
 SIGN-IN AND SUBMISSIONS
-  Visitors sign in with their name before the questions appear. The name is
-  required, remembered on their phone, and saved with every response ("Not
-  you?" switches person).
+  Visitors sign in with their name (required) and email (optional) before
+  the questions appear. Both are remembered on their phone and saved with
+  every response ("Not you?" switches person). Visitors have no password;
+  this only records who they are.
   Responses go to the Supabase table thanksgiving_responses. The first four
   answers go into the original columns (coworker_thanks, smiling_moment,
   team_thanks, looking_forward). If the questions were edited, each column
   also gets its question, and answers 5 to 8 are added to looking_forward.
-  Run supabase/answers-column.sql once to also save every question and
-  answer, exactly as asked, in an "answers" column.
+  After supabase/setup.sql has run, the email has its own column and every
+  question and answer is saved exactly as asked in the "answers" column.
+  Before that, the email is saved next to the name, e.g.
+  "Maria Lopez (maria@example.com)".
   The countdown uses the date from settings, or the event date saved in
   Supabase if the link has none. The settings preview never sends responses.
 
@@ -98,9 +108,19 @@ QR CARD
   or Square. The code sits in the middle with a clear white border so it
   still scans; the loose dots around it are decoration.
 
-STILL OPEN
-  A private view/export of responses is still to do. The public key cannot
-  read responses (checked: 401).
+ORGANIZER LOGIN (one-time setup in the Supabase dashboard)
+  1. SQL Editor > New query: paste supabase/setup.sql, change
+     you@example.com to your email (one line per organizer), Run.
+  2. Authentication > Users > Add user > Create new user: your email and a
+     password, "Auto Confirm User" ticked.
+  3. Authentication > URL Configuration: add
+     https://youngpro718.github.io/beyond-the-badge/settings.html
+     to Redirect URLs, so "Forgot password?" emails come back to the page.
+  4. Authentication > Sign In / Providers: turn off "Allow new users to sign
+     up", so nobody else can make an account.
+  To add an organizer later: add their email to the organizers table and
+  create their user (step 2). Only listed emails can open the settings or
+  read responses; the database enforces it, not just the page.
 
 Open the pages through a web server, not by double-clicking the file
 (for a quick local test: python3 -m http.server 8080 in this folder, then
