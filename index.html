@@ -159,6 +159,23 @@ input[aria-invalid="true"]{border-color:#b3261e}
   .q{transition:none}
 }
 .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+/* ---- poster themes (Courthouse Superlatives): the vintage flyer look ---- */
+body.poster{--display:"Bangers",Impact,"Arial Black",sans-serif;--type:"Special Elite","Courier New",monospace}
+body.poster .sky{background:radial-gradient(ellipse at 50% 40%,var(--bg1) 0%,var(--bg1) 45%,var(--bg2) 100%)}
+body.poster .card,body.poster .q{border-radius:10px;border:2px solid rgba(70,40,15,.45);box-shadow:inset 0 0 36px rgba(140,90,30,.16),0 6px 20px rgba(60,30,10,.14)}
+body.poster .hero{padding-top:0}
+body.poster .hero::before{display:none}
+body.poster .hero-art.wide{display:block;width:calc(100% + 48px);max-width:none;height:auto;margin:0 -24px 18px;border-bottom:3px solid rgba(70,40,15,.6);animation:none}
+body.poster h1{font:400 clamp(44px,13vw,72px)/.95 var(--display);letter-spacing:.02em;text-transform:uppercase;color:var(--heading);text-shadow:3px 3px 0 #1f2a4a}
+body.poster .eyebrow{color:#1f2a4a}
+body.poster .subtitle{display:inline-block;margin-top:4px;padding:6px 18px;font:17px/1.35 var(--type);background:var(--soft);border:2px solid rgba(70,40,15,.55);transform:rotate(-1.5deg);opacity:1}
+body.poster .note,body.poster .lead{font-family:var(--type);opacity:1}
+body.poster .note{font-size:18px;color:var(--ink)}
+body.poster h2,body.poster .finale p,body.poster .notice h2{font-family:var(--display);font-weight:400;letter-spacing:.03em;font-size:26px;text-transform:uppercase}
+body.poster .q > label{font:400 18px/1.35 var(--type);color:var(--ink)}
+body.poster .num{flex-basis:32px;height:32px;margin-top:-3px;border-radius:0;background:var(--accent);color:#1f2a4a;font:400 15px/34px var(--display);clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)}
+body.poster textarea,body.poster input{background:#fffaf0;border-color:var(--field)}
+body.poster .btn{text-transform:uppercase;letter-spacing:.06em}
 .preview-flag{position:fixed;inset:0 0 auto;z-index:40;background:#1f2329;color:#fff;font:700 11px/1 var(--sans);letter-spacing:.12em;text-align:center;padding:6px}
 </style>
 </head>
@@ -224,7 +241,7 @@ input[aria-invalid="true"]{border-color:#b3261e}
 </aside>
 
 <script src="config.js?v=8"></script>
-<script src="themes.js?v=9"></script>
+<script src="themes.js?v=11"></script>
 <script>
 const SUPABASE = SUPABASE_URL + '/rest/v1/', KEY = SUPABASE_KEY;
 const S = readSettings(location.search);
@@ -258,6 +275,10 @@ for (const k of ['bg1', 'bg2', 'card', 'ink', 'heading', 'accent', 'soft', 'fiel
 if (S.bgColor) { css.setProperty('--bg1', S.bgColor); css.setProperty('--bg2', S.bgColor); }
 if (S.accent) css.setProperty('--accent', S.accent);
 
+if (theme.style === 'poster') {
+  document.body.classList.add('poster');
+  document.head.insertAdjacentHTML('beforeend', '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bangers&family=Special+Elite&display=swap">');
+}
 const title = S.title || theme.headline;
 $('#title').textContent = title;
 $('#eyebrow').textContent = S.eyebrow;
@@ -271,7 +292,8 @@ const heroPic = heroSrc(S, theme);
 function heroDecor() { $('#heroArt').className = 'hero-decor'; $('#heroArt').textContent = S.heroImage === 'none' ? '' : theme.decor.slice(0, 3).join(' '); }
 if (heroPic) {
   const img = new Image();
-  img.className = 'hero-art' + (S.heroImage.startsWith('u:') ? ' logo' : '');
+  // a poster theme's own picture runs across the top of the header, like the flyer
+  img.className = 'hero-art' + (S.heroImage.startsWith('u:') ? ' logo' : theme.style === 'poster' && heroPic === theme.hero ? ' wide' : '');
   img.alt = '';
   img.onerror = () => { img.remove(); heroDecor(); };   // a deleted upload: fall back quietly
   img.src = heroPic;
@@ -328,8 +350,10 @@ questions.forEach((text, i) => {
 const guideEl = $('#guide'), guideImg = $('#guideImg'), bubble = $('#bubble');
 const LINES = {
   hello: 'Hi! Start by signing in with your name.',
-  q: ['Someone deserves a little appreciation!', 'Those little moments make a big difference.', 'A great team makes all the difference.',
-      'What are you looking forward to?', 'Take your time.', 'Great answers so far!', 'Almost there!', 'Last one, you’ve got this.'],
+  // the thank-you lines fit the original questions; anything else gets lines that fit any question
+  q: sameQuestions(S.questions, QUESTIONS)
+    ? ['Someone deserves a little appreciation!', 'Those little moments make a big difference.', 'A great team makes all the difference.', 'What are you looking forward to?']
+    : ['Who comes to mind first?', 'Great pick!', 'Take your time.', 'Keep them coming!', 'You’re doing great.', 'Almost there!', 'Nearly done!', 'Last one, you’ve got this.'],
   ready: 'All set? Tap the button when you’re ready.',
   done: 'Thank you for sharing!',
   tap: ['Hey, that tickles!', 'Still on duty!', 'Order in the court!', 'Keep going, you’re doing great.'],
@@ -349,7 +373,11 @@ function show(name) {
   if (!guide) return;
   step = name;
   const g = MASCOTS[guide].guide;
-  if (name.startsWith('q')) { const i = +name.slice(1); draw(g.q[i % g.q.length]); say(LINES.q[i % LINES.q.length]); }
+  if (name.startsWith('q')) {
+    const i = +name.slice(1), last = i === questions.length - 1 && !sameQuestions(questions, QUESTIONS);
+    draw(g.q[i % g.q.length]);
+    say(last ? 'Last one, you’ve got this.' : LINES.q[i % LINES.q.length]);
+  }
   else { draw(g[name]); say(LINES[name]); }
   if (!reduceMotion) replay(guideImg, 'hop');
 }

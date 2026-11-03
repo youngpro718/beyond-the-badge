@@ -1,6 +1,6 @@
 // Shared by index.html (the sign-up page) and settings.html.
 // Edit a theme, a guide or a runaway here and both pages pick it up.
-// After editing, raise the number in "themes.js?v=9" in both pages, so phones
+// After editing, raise the number in "themes.js?v=11" in both pages, so phones
 // that already opened the page download the new version instead of a cached one.
 // Frames live in assets/cut/, made from assets/source/ by tools/make-cutouts.py.
 
@@ -41,6 +41,8 @@ const MONTH_THEMES = ['newyear', 'valentine', 'stpatrick', 'spring', 'memorial',
 //             (Memorial Day and Juneteenth have none, on purpose)
 //   colors    bg1/bg2 background gradient, card, ink (text), heading,
 //             accent, soft (light tint), field (input border), button
+//   style     'poster' = the vintage-flyer look (poster fonts, parchment,
+//             star numbers, the picture across the top of the header)
 const THEMES = {
   newyear:      { name: 'New Year', headline: 'Happy New Year', hero: 'assets/cut/holiday/newyear.webp', decor: ['🎉', '✨', '🎊'], runner: 'newyearBaby',
                   bg1: '#f6f1e3', bg2: '#e4d4a8', card: '#fffdf7', ink: '#1f2433', heading: '#1f2a4a', accent: '#a8842c', soft: '#f5edd6', field: '#d8cba6', button: '#1f2a4a' },
@@ -67,6 +69,8 @@ const THEMES = {
   winter:       { name: 'Winter Holidays', headline: 'Happy Holidays', hero: 'assets/cut/holiday/winter.webp', decor: ['❄️', '⛄', '🎁'], runner: 'elf',
                   bg1: '#eaf2f9', bg2: '#c8dbec', card: '#ffffff', ink: '#17283a', heading: '#1d3c5a', accent: '#b8323a', soft: '#e8f0f7', field: '#c9d7e4', button: '#1d3c5a' },
   // Not tied to a holiday, for any other event.
+  superlatives: { name: 'Courthouse Superlatives', headline: 'Courthouse Superlatives', hero: 'assets/cut/themes/superlatives.webp', decor: ['⭐', '🏆', '⚖️'], runner: null, style: 'poster',
+                  bg1: '#f1e0bd', bg2: '#d9b27a', card: '#fbf0d9', ink: '#2a1d14', heading: '#8f1d1d', accent: '#c48a1c', soft: '#f5e3bd', field: '#c9a56d', button: '#1f2a4a' },
   navy:         { name: 'Plain navy', headline: 'Thank You', decor: [], runner: null,
                   bg1: '#eef2f6', bg2: '#d6e0ea', card: '#ffffff', ink: '#19304a', heading: '#253a51', accent: '#4a6a8a', soft: '#eaf0f5', field: '#c8d3de', button: '#254052' },
 };
@@ -137,6 +141,28 @@ const DEFAULTS = {
   roundStart: '',      // only responses since then count for "one each"
 };
 
+// Ready-made question sets, picked in settings ("Start from"). Each replaces
+// the theme, the wording and the questions in one go.
+const PRESETS = {
+  thanks: {
+    label: 'A moment of thanks', theme: 'auto', title: '', subtitle: DEFAULTS.subtitle, intro: DEFAULTS.intro,
+    questions: QUESTIONS, button: DEFAULTS.button, thanks: DEFAULTS.thanks, cta: DEFAULTS.cta,
+  },
+  superlatives: {
+    label: 'Courthouse Superlatives', theme: 'superlatives', title: '',
+    subtitle: 'Every command has its legends.', intro: 'Nominate a coworker for each title.',
+    questions: [
+      'The Human GPS — always knows where to go',
+      'The Calm in the Chaos — keeps everyone grounded',
+      'The Walking Radio — knows what’s happening',
+      'The Shift Saver — always comes through',
+      'The Master of the Side-Eye — says it all without a word',
+      'Your own award and nominee',
+    ],
+    button: 'Submit my nominations', thanks: 'Your nominations are in. Thank you!', cta: 'Scan to nominate a coworker',
+  },
+};
+
 // Settings travel in the page link, so the QR code carries the look and the
 // questions. Short keys keep the QR code small; questions repeat as q=...&q=...
 const PARAM_KEYS = { theme: 't', title: 'h', eyebrow: 'e', subtitle: 's', heroImage: 'hi', signIn: 'si', intro: 'i', button: 'bt', thanks: 'ty',
@@ -146,9 +172,18 @@ const OLD_MASCOT_NAMES = { female: 'female-officer', male: 'male-officer' };   /
 
 const sameQuestions = (a, b) => a.length === b.length && a.every((q, i) => q === b[i]);
 
+// The wording a question set brings ("p=superlatives" in the link stands for
+// all of it, which keeps the QR code simple). The theme is set separately.
+function presetWords(key) {
+  const p = PRESETS[key];
+  if (!p) return {};
+  const { label, theme, ...words } = p;
+  return words;
+}
+
 function readSettings(search) {
   const p = new URLSearchParams(search);
-  const s = Object.assign({}, DEFAULTS);
+  const s = Object.assign({}, DEFAULTS, presetWords(p.get('p')));
   for (const [key, short] of Object.entries(PARAM_KEYS)) if (p.has(short)) s[key] = p.get(short);
   for (const key of ON_OFF) s[key] = String(s[key]) !== '0' && String(s[key]) !== 'false';
   const qs = p.getAll('q').map(q => q.trim().slice(0, 300)).filter(Boolean).slice(0, MAX_QUESTIONS);
@@ -160,14 +195,18 @@ function readSettings(search) {
 
 function settingsToQuery(s) {
   const p = new URLSearchParams();
+  const qs = (s.questions || []).map(q => q.trim()).filter(Boolean);
+  // a question set used as it is goes in as its name; only changes are spelled out
+  const preset = Object.keys(PRESETS).find(k => k !== 'thanks' && sameQuestions(qs, PRESETS[k].questions));
+  const base = Object.assign({}, DEFAULTS, presetWords(preset));
+  if (preset) p.set('p', preset);
   for (const [key, short] of Object.entries(PARAM_KEYS)) {
     const v = s[key];
     if (ON_OFF.includes(key)) { if (v === false) p.set(short, '0'); continue; }
-    if (v == null || v === '' || v === DEFAULTS[key]) continue;
+    if (v == null || v === '' || v === base[key]) continue;
     p.set(short, v);
   }
-  const qs = (s.questions || []).map(q => q.trim()).filter(Boolean);
-  if (qs.length && !sameQuestions(qs, QUESTIONS)) qs.forEach(q => p.append('q', q));
+  if (qs.length && !sameQuestions(qs, base.questions)) qs.forEach(q => p.append('q', q));
   return p.toString();
 }
 

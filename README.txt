@@ -25,7 +25,7 @@ FILES
   assets/share.png  The picture shown when the link is shared by text or chat.
   themes.js      The holiday themes and the mascots, shared by both pages.
                  Edit a theme's colors, title, decorations or runaway here.
-                 After editing it, raise the number in "themes.js?v=9" in
+                 After editing it, raise the number in "themes.js?v=11" in
                  index.html and settings.html so phones don't keep the old copy.
   assets/
     source/      The supplied art, unchanged:
@@ -78,6 +78,16 @@ THEMES (automatic by month)
   Thanksgiving · December Winter Holidays. "Plain navy" is for any other event.
   Memorial Day, Juneteenth and Plain navy have no chase on purpose; a row of
   the theme's decorations sits between questions instead.
+  Courthouse Superlatives (any time) looks like the paper flyer: parchment,
+  poster lettering, typewriter questions, star numbers and the flyer's art
+  across the top. Its art is in assets/cut/themes/, cut from
+  assets/source/themes/courthouse-superlatives-flyer.webp.
+
+QUESTION SETS ("Start from" in settings)
+  A moment of thanks (the original four) and Courthouse Superlatives (six
+  nominations). Picking one fills in the theme, wording and questions; the
+  link then just says p=superlatives, so the QR code stays simple. Anything
+  changed afterwards is added to the link.
 
 MASCOTS
   Guides: female officer, male officer, female judge, male judge. All four

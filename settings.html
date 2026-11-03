@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Event Page Settings</title>
 <meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bangers&family=Special+Elite&display=swap">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 2c6 4 15 5 24 2l6 6c-4 8-3 17 1 23-1 15-12 24-31 29C13 57 2 48 1 33c4-6 5-15 1-23l6-6c9 3 18 2 24-2z' fill='%23b8862f'/%3E%3Cpath d='M32 18l4 9 10 1-7 7 2 10-9-5-9 5 2-10-7-7 10-1z' fill='%231f2a4a'/%3E%3C/svg%3E">
 <style>
 :root{
@@ -226,6 +228,10 @@ code{font:12px ui-monospace,Menlo,monospace;background:#f3f2ef;padding:1px 5px;b
     <details class="sec" data-sec="questions" open>
       <summary><span class="sec-title">Sign-in and questions</span><span class="sec-sum" id="sumQuestions"></span><span class="chev"></span></summary>
       <div class="sec-body">
+        <div class="field"><span>Start from</span>
+          <div class="btn-row" id="presets" style="margin-top:0"></div>
+          <p class="hint">Fills in the theme, the wording and the questions in one go. You can still edit everything after.</p>
+        </div>
         <label class="field"><span>Sign-in message</span><input type="text" id="signIn"></label>
         <p class="hint">Everyone signs in with their name before the questions appear. The name is saved with their answers.</p>
         <label class="field"><span>Line above the questions</span><input type="text" id="intro"></label>
@@ -343,7 +349,7 @@ code{font:12px ui-monospace,Menlo,monospace;background:#f3f2ef;padding:1px 5px;b
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="config.js?v=8"></script>
-<script src="themes.js?v=9"></script>
+<script src="themes.js?v=11"></script>
 <script src="assets/qrcode-generator.js"></script>
 <script>
 const $ = s => document.querySelector(s);
@@ -417,6 +423,7 @@ function buildSwatches() {
   };
   make('auto', thisMonth, 'Automatic', `Now: ${thisMonth.name}`);
   MONTH_THEMES.forEach((key, i) => make(key, THEMES[key], THEMES[key].name, new Date(2000, i, 1).toLocaleString('en-US', { month: 'long' })));
+  make('superlatives', THEMES.superlatives, THEMES.superlatives.name, 'Any event');
   make('navy', THEMES.navy, THEMES.navy.name, 'Any event');
 }
 
@@ -471,6 +478,21 @@ $('#heroFile').addEventListener('change', async e => {
     msg('Couldn’t upload that picture. Try a smaller one, or check the connection.', true);
   }
 });
+
+// ---- ready-made question sets ----------------------------------------------------
+for (const [key, p] of Object.entries(PRESETS)) {
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'btn'; b.textContent = p.label;
+  b.addEventListener('click', () => {
+    if (!confirm(`Switch to “${p.label}”? This replaces the theme, the title, the wording and the questions.`)) return;
+    const { label, ...values } = p;
+    Object.assign(s, values, { questions: p.questions.slice() });
+    // new questions usually mean a new event: let everyone answer again
+    if (s.oneEach !== false && confirm('Start a new round too, so people who already answered can respond to these questions?')) s.roundStart = new Date().toISOString();
+    fill(); save();
+  });
+  $('#presets').appendChild(b);
+}
 
 // ---- question editor ----------------------------------------------------------
 function buildQuestions() {
@@ -740,6 +762,8 @@ async function drawCard() {
   const pic = heroSrc(s, t);
   const figure = pic ? await loadImg(pic) : s.mascot === 'none' ? null : await loadImg(MASCOTS[guideKey].guide.hello);
   const runnerImg = t.runner ? await loadImg(t.runner.frames.run[0]) : null;
+  // the poster fonts must be loaded before they can be drawn on the card
+  if (t.style === 'poster') await Promise.all([document.fonts.load('60px Bangers'), document.fonts.load('30px "Special Elite"')]).catch(() => {});
   if (token !== drawToken) return;
 
   // background and scattered decorations
@@ -758,32 +782,52 @@ async function drawCard() {
   roundRect(ctx, cx, cy, cw, ch, 48); ctx.fillStyle = t.card; ctx.fill(); ctx.restore();
   ctx.save(); roundRect(ctx, cx, cy, cw, ch, 48); ctx.clip(); ctx.fillStyle = accent; ctx.fillRect(cx, cy, cw, 18); ctx.restore();
 
+  // poster theme: its picture runs across the top of the card, like the flyer
+  const poster = t.style === 'poster', banner = poster && figure && pic === t.hero;
+  let top = cy;
+  if (banner) {
+    const bh = 300, k = Math.max(cw / figure.width, bh / figure.height), sw = cw / k, sh = bh / k;
+    ctx.save(); roundRect(ctx, cx, cy, cw, ch, 48); ctx.clip();
+    ctx.drawImage(figure, (figure.width - sw) / 2, (figure.height - sh) / 2, sw, sh, cx, cy, cw, bh);
+    ctx.fillStyle = '#1f2a4a'; ctx.fillRect(cx, cy + bh, cw, 6);
+    ctx.restore();
+    top = cy + bh - 30;
+  }
+
   // words
   ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
-  ctx.fillStyle = accent; ctx.font = 'bold 34px Arial, sans-serif';
-  const eyebrow = (s.eyebrow || '').toUpperCase().split('').join(String.fromCharCode(8202));
-  ctx.fillText(eyebrow, W / 2, cy + 110);
+  if (!banner) {   // the poster picture already says it
+    ctx.fillStyle = accent; ctx.font = 'bold 34px Arial, sans-serif';
+    const eyebrow = (s.eyebrow || '').toUpperCase().split('').join(String.fromCharCode(8202));
+    ctx.fillText(eyebrow, W / 2, cy + 110);
+  }
   ctx.fillStyle = t.heading;
-  const title = s.title || t.headline;
-  let size = 108, lines;
-  do { ctx.font = `bold ${size}px Georgia, serif`; lines = wrapLines(ctx, title, cw - 120); size -= 6; } while (lines.length > 2 && size > 54);
-  lines.forEach((ln, i) => ctx.fillText(ln, W / 2, cy + 225 + i * (size + 14)));
-  const afterTitle = cy + 225 + (lines.length - 1) * (size + 14);
+  const title = poster ? (s.title || t.headline).toUpperCase() : s.title || t.headline;
+  const titleFont = px => poster ? `${px}px Bangers, Impact, sans-serif` : `bold ${px}px Georgia, serif`;
+  let size = poster ? 120 : 108, lines;
+  for (;; size -= 6) { ctx.font = titleFont(size); lines = wrapLines(ctx, title, cw - 120); if (lines.length <= 2 || size <= 54) break; }
+  const lineGap = size + (poster ? 4 : 14), titleY = top + (banner ? 140 : 225);
+  if (poster) { ctx.save(); ctx.fillStyle = '#1f2a4a'; lines.forEach((ln, i) => ctx.fillText(ln, W / 2 + 5, titleY + 5 + i * lineGap)); ctx.restore(); }
+  lines.forEach((ln, i) => ctx.fillText(ln, W / 2, titleY + i * lineGap));
+  const afterTitle = titleY + (lines.length - 1) * lineGap;
 
   // QR code, in the chosen shape
   const qy = Math.round(afterTitle + 60);
   const square = s.qrShape === 'square';
-  const code = renderQr(link(), s.qrShape, square ? 620 : Math.min(780, cy + ch - 280 - qy), t.heading, accent);
+  const code = renderQr(link(), s.qrShape, square ? 620 : Math.min(780, cy + ch - 280 - qy), qrInk(t), accent);
   const qx = Math.round(W / 2 - code.width / 2);
   if (square) { ctx.fillStyle = '#ffffff'; roundRect(ctx, qx - 8, qy - 8, code.width + 16, code.height + 16, 24); ctx.fill(); }
   ctx.drawImage(code, qx, qy);
 
   // call to action
-  ctx.fillStyle = t.ink; ctx.font = 'bold 50px Georgia, serif';
+  ctx.fillStyle = t.ink; ctx.font = poster ? '44px "Special Elite", "Courier New", monospace' : 'bold 50px Georgia, serif';
   ctx.fillText(s.cta || DEFAULTS.cta, W / 2, qy + code.height + (square ? 92 : 70));
 
   // a character and the runaway at the bottom corners
-  if (figure) {
+  const corner = banner ? (s.mascot === 'none' ? null : await loadImg(MASCOTS[guideKey].guide.hello)) : figure;
+  if (token !== drawToken) return;
+  if (corner) {
+    const figure = corner;
     const k = Math.min(270 / figure.height, 240 / figure.width), dh = figure.height * k, dw = figure.width * k;   // a wide logo stays in its corner
     ctx.drawImage(figure, cx + 24, cy + ch - dh + 40, dw, dh);
   }
@@ -792,6 +836,8 @@ async function drawCard() {
     ctx.drawImage(runnerImg, cx + cw - dw - 36, cy + ch - dh - 14, dw, dh);
   }
 }
+// dark enough for any phone to read: a poster theme's red heading is too light
+function qrInk(t) { return t.style === 'poster' ? '#1f2a4a' : t.heading; }
 function download(canvas, name) {
   const a = document.createElement('a');
   a.download = name; a.href = canvas.toDataURL('image/png'); a.click();
@@ -800,7 +846,7 @@ function slug() { return (s.title || resolveTheme(s.theme).headline).toLowerCase
 $('#download').addEventListener('click', () => download($('#card'), slug() + '-qr-card.png'));
 $('#downloadQr').addEventListener('click', () => {
   const t = resolveTheme(s.theme);
-  download(renderQr(link(), s.qrShape, 1400, t.heading, s.accent || t.accent), slug() + '-qr.png');
+  download(renderQr(link(), s.qrShape, 1400, qrInk(t), s.accent || t.accent), slug() + '-qr.png');
 });
 $('#print').addEventListener('click', () => {
   const w = window.open('', '_blank');
