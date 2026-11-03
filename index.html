@@ -45,6 +45,11 @@ main{max-width:620px;margin:0 auto;padding:24px 16px 200px}
 @keyframes rise{from{opacity:0;transform:translateY(30px) scale(.9)}to{opacity:1;transform:none}}
 @keyframes sway{50%{transform:rotate(1.5deg) translateY(-2px)}}
 .hero-art{max-width:100%;object-fit:contain}
+/* a picture across the top of the header, like a flyer banner */
+.hero.banner{padding-top:0}
+.hero.banner::before{display:none}
+.hero-art.wide{display:block;width:calc(100% + 48px);max-width:none;height:auto;max-height:320px;object-fit:cover;object-position:50% 0;margin:0 -24px 18px;border-bottom:3px solid var(--accent);animation:none}
+body.poster .hero-art.wide{border-bottom-color:rgba(70,40,15,.6)}
 .hero-art.logo{height:auto;max-height:150px;animation:rise .8s cubic-bezier(.2,1.2,.4,1) both}
 .hero-decor{font-size:30px;letter-spacing:10px;line-height:1;margin-bottom:12px}
 .hero-decor:empty{display:none}
@@ -163,9 +168,6 @@ input[aria-invalid="true"]{border-color:#b3261e}
 body.poster{--display:"Bangers",Impact,"Arial Black",sans-serif;--type:"Special Elite","Courier New",monospace}
 body.poster .sky{background:radial-gradient(ellipse at 50% 40%,var(--bg1) 0%,var(--bg1) 45%,var(--bg2) 100%)}
 body.poster .card,body.poster .q{border-radius:10px;border:2px solid rgba(70,40,15,.45);box-shadow:inset 0 0 36px rgba(140,90,30,.16),0 6px 20px rgba(60,30,10,.14)}
-body.poster .hero{padding-top:0}
-body.poster .hero::before{display:none}
-body.poster .hero-art.wide{display:block;width:calc(100% + 48px);max-width:none;height:auto;margin:0 -24px 18px;border-bottom:3px solid rgba(70,40,15,.6);animation:none}
 body.poster h1{font:400 clamp(44px,13vw,72px)/.95 var(--display);letter-spacing:.02em;text-transform:uppercase;color:var(--heading);text-shadow:3px 3px 0 #1f2a4a}
 body.poster .eyebrow{color:#1f2a4a}
 body.poster .subtitle{display:inline-block;margin-top:4px;padding:6px 18px;font:17px/1.35 var(--type);background:var(--soft);border:2px solid rgba(70,40,15,.55);transform:rotate(-1.5deg);opacity:1}
@@ -241,7 +243,7 @@ body.poster .btn{text-transform:uppercase;letter-spacing:.06em}
 </aside>
 
 <script src="config.js?v=8"></script>
-<script src="themes.js?v=11"></script>
+<script src="themes.js?v=12"></script>
 <script>
 const SUPABASE = SUPABASE_URL + '/rest/v1/', KEY = SUPABASE_KEY;
 const S = readSettings(location.search);
@@ -292,10 +294,11 @@ const heroPic = heroSrc(S, theme);
 function heroDecor() { $('#heroArt').className = 'hero-decor'; $('#heroArt').textContent = S.heroImage === 'none' ? '' : theme.decor.slice(0, 3).join(' '); }
 if (heroPic) {
   const img = new Image();
-  // a poster theme's own picture runs across the top of the header, like the flyer
-  img.className = 'hero-art' + (S.heroImage.startsWith('u:') ? ' logo' : theme.style === 'poster' && heroPic === theme.hero ? ' wide' : '');
+  const wide = heroWide(S, theme, heroPic);
+  img.className = 'hero-art' + (wide ? ' wide' : S.heroImage.startsWith('u:') ? ' logo' : '');
+  if (wide) $('.hero').classList.add('banner');
   img.alt = '';
-  img.onerror = () => { img.remove(); heroDecor(); };   // a deleted upload: fall back quietly
+  img.onerror = () => { img.remove(); $('.hero').classList.remove('banner'); heroDecor(); };   // a deleted upload: fall back quietly
   img.src = heroPic;
   $('#heroArt').appendChild(img);
 } else heroDecor();

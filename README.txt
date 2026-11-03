@@ -25,7 +25,7 @@ FILES
   assets/share.png  The picture shown when the link is shared by text or chat.
   themes.js      The holiday themes and the mascots, shared by both pages.
                  Edit a theme's colors, title, decorations or runaway here.
-                 After editing it, raise the number in "themes.js?v=11" in
+                 After editing it, raise the number in "themes.js?v=12" in
                  index.html and settings.html so phones don't keep the old copy.
   assets/
     source/      The supplied art, unchanged:
@@ -129,6 +129,15 @@ QR CARD
   "QR code shape" in settings: Badge (a police shield with a star), Circle
   or Square. The code sits in the middle with a clear white border so it
   still scans; the loose dots around it are decoration.
+  "Put the QR code on your own flyer" (same section): choose any flyer or
+  photo, pick a corner and a size, and download it with a "Scan to
+  nominate" tag. It's drawn on your computer (nothing is uploaded) and
+  checked to make sure the code still scans.
+
+HEADER PICTURE
+  Any picture (theme art, a guide, an upload) can be shown Centered or
+  Across the top, like a flyer banner. Automatic: poster themes' art goes
+  across the top, everything else is centered.
 
 ORGANIZER LOGIN (one-time setup in the Supabase dashboard)
   1. SQL Editor > New query: paste supabase/setup.sql, change
